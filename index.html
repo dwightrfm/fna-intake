@@ -386,6 +386,7 @@ a{color:var(--tea);font-weight:600}
   <button class="btn ghost" id="openBtn" title="Load answers from a filled FNA Intake PDF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M12 4v11M7 10l5 5 5-5"/></svg><span class="lbl-hide">Open PDF</span></button>
   <input type="file" id="pdfFile" accept="application/pdf,.pdf" hidden>
   <button class="btn" id="pvBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="lbl-hide">Preview PDF</span></button>
+  <button class="btn" id="rptBtn" title="Open this client in the FNA Report app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg><span class="lbl-hide">Build report</span></button>
   <button class="btn primary" id="dlBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4v12M6 11l6 6 6-6M4 20h16"/></svg><span class="lbl-hide">Download PDF</span></button>
 </header>
 
@@ -1840,6 +1841,12 @@ a{color:var(--tea);font-weight:600}
   $('#capGo').addEventListener('click', capture);
   $('#dlBtn').addEventListener('click', () => pdfAction('dl'));
   $('#pvBtn').addEventListener('click', () => pdfAction('pv'));
+  // hand this client to the FNA Report app (same site, same device storage)
+  $('#rptBtn').addEventListener('click', () => {
+    if (!(S.PROSPECT || '').trim()) { alert('Add the prospect name first.'); return; }
+    clearTimeout(saveT); DB.clients[CUR] = { state: S, updated: Date.now() }; DB.current = CUR; persist();
+    window.location.href = `../fna-report/index.html?intake=${encodeURIComponent(CUR)}`;
+  });
   $('#newBtn').addEventListener('click', newClient);
   $('#clientsBtn').addEventListener('click', openClients);
   $('#closeDrawer').addEventListener('click', closeVeil);
