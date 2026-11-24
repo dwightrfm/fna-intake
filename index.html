@@ -326,6 +326,10 @@ a{color:var(--tea);font-weight:600}
 .btn[hidden]{display:none}
 .subhd{display:flex;align-items:center;gap:12px;margin:34px 0 14px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tea)}
 .subhd::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--tea2),transparent);opacity:.5}
+.closer{position:relative;margin:30px 0 6px;padding:22px 26px 24px 30px;border-radius:18px;background:linear-gradient(160deg,#e6f4f3,#d3ecea);border:1px solid var(--tea2);box-shadow:0 16px 34px -22px rgba(14,124,122,.7)}
+.closer::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:5px;border-radius:0 4px 4px 0;background:var(--teaG)}
+.closer .tag{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tea);margin-bottom:10px}
+.closer .say{margin:0;font-size:22px;line-height:1.4;font-weight:700;color:var(--ink)}
 .askrow{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
 .askrow .say{margin-bottom:8px}
 .askrow .btn{flex:none;margin-top:2px}
@@ -382,6 +386,8 @@ a{color:var(--tea);font-weight:600}
   .intros .hd{display:none}
   .intros .irow>:nth-child(4),.intros .irow>:nth-child(5){grid-column:2/-1}
   .askrow{flex-direction:column;gap:0}
+  .closer{padding:18px 18px 20px 22px}
+  .closer .say{font-size:19px}
 }
 @media (max-width:600px){
   .brand h1,.brand .sub{display:none}
@@ -1614,10 +1620,8 @@ a{color:var(--tea);font-weight:600}
         <p class="sentence" data-saving></p>
         <div class="grid g2">${inp(EXP_.sound, { label: 'How does that sound?' })}</div>
 
-        <div class="subhd"><span>The commitment</span></div>
-        ${say('We are going to take this info and put together a great plan for you. When we get back together, if the plan is better than what you are currently doing, would there be anything stopping you from investing in your future?')}
-        ${seg('_commit', F.COMMIT, { reg: 'The commitment: anything stopping them?' })}
-        <div style="height:12px"></div>${inp(EXP_.future, { label: 'Why? In their words', ph: 'What they said', reg: 'The commitment: why' })}
+        <div class="closer"><div class="tag">The close &middot; ask it every time</div>
+          <p class="say">We are going to take this info and put together a great plan for you. When we get back together, if the plan is better than what you are currently doing, would there be anything stopping you from investing in your future?</p></div>
 
         <div class="subhd"><span>Personal introductions</span></div>
         <p class="tip" style="margin:0 0 6px">Read this out loud, then ask.</p>
