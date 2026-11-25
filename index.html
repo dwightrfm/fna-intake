@@ -481,6 +481,16 @@ a{color:var(--tea);font-weight:600}
 @media (max-width:1250px){.padbtn{left:16px;bottom:108px}.pad{left:16px;bottom:166px}}
 @media (max-width:600px){.padbtn{bottom:96px}.pad{bottom:150px}}
 @media print{.padbtn,.pad{display:none}}
+
+/* one-line answers that wrap and grow */
+.in textarea.one{min-height:40px;height:40px;padding:9px 12px;resize:none;line-height:20px}
+/* plans 2 to 4 */
+.plan{margin-top:14px;padding:12px 14px 14px;border:1px dashed var(--line2);border-radius:13px;background:rgba(255,255,255,.5)}
+.plan .planhd{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+/* underwriting guide picker */
+.uw{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.uw a{font-weight:700}
+.estateflag{margin:6px 0 0;color:var(--tea);font-weight:600}
 </style>
 </head>
 <body>
@@ -515,7 +525,7 @@ a{color:var(--tea);font-weight:600}
 <div class="dock">
   <div class="dock-in">
     <div class="spk" id="spk" title="Who is talking (Option + S)"><button type="button" data-w="p" class="on"><i></i><span>Prospect</span></button><button type="button" data-w="s"><i></i><span>Spouse</span></button></div>
-    <input id="cap" autocomplete="off" spellcheck="false" placeholder='Type what you hear... "his 401k is 85k and he puts in 6%"' aria-label="Quick capture">
+    <input id="cap" autocomplete="off" spellcheck="false" placeholder='Type in additional details here' aria-label="Quick capture">
     <button class="go" id="capGo" title="Drop it in (Enter)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
   </div>
   <div class="preview" id="pv"></div>
@@ -638,6 +648,14 @@ a{color:var(--tea);font-weight:600}
   ];
   const EXTRA_DEBTS = [7, 8, 9, 10].map((n) => ({ type: `_x${n} type`, bal: `_x${n} bal`, rate: `_x${n} rate`, pay: `_x${n} pay`, extra: true }));
   const ALL_DEBTS = [...DEBT_ROWS, ...EXTRA_DEBTS];
+  /* Plans 2 to 4 for each person have no box on the paper form. App-only keys,
+     they count toward "Has" and print on the Notes lines. */
+  const EXTRA_PLANS = Object.fromEntries(['p', 's'].map((w) => [w, [2, 3, 4].map((n) => ({ n, amt: `_plan${n}${w} amt`, type: `_plan${n}${w} type`, company: `_plan${n}${w} company`, cost: `_plan${n}${w} cost`, had: `_plan${n}${w} had` }))]));
+  /* Underwriting guides by carrier. Add a carrier = add a line. Empty link = "not added yet". */
+  const UW_GUIDES = {
+    Nationwide: 'https://drive.google.com/file/d/1HGRhQduKuMan6nqsaZAaVSwS1rFoeIX6/view?usp=drive_link',
+    Transamerica: '',
+  };
 
   const GOALS = [
     ['Pay off debt', 'Pay off debt'], ['Retirement', 'Retirement'], ['Buy Property', 'Buy property'],
@@ -738,6 +756,7 @@ a{color:var(--tea);font-weight:600}
     RET.old.forEach((o) => addM(sp(o.bal, w)));
     addM(sp(INC.biw, w), sp(INC.semi, w), sp(INC.week, w), sp(INC.month, w), ...INC.other.map((o) => sp(o.amt, w)));
     addM(sp(INC.biwM, w), sp(INC.semiM, w), sp(INC.weekM, w), sp(INC.net, w));
+    EXTRA_PLANS[w].forEach((x) => addM(x.amt, x.cost));
     addM(sp(PRO.cost, w), sp(PRO.dDebts, w), sp(PRO.dIncome, w), sp(PRO.dMort, w), sp(PRO.dEdu, w), sp(PRO.dTotal, w), sp(PRO.dMin, w), sp(PRO.ltcCov, w), sp(PRO.ltcPrem, w));
   }
   DEBT_ROWS.forEach((r) => addM(r.bal, r.pay));
@@ -796,7 +815,7 @@ a{color:var(--tea);font-weight:600}
       c['ret_' + w] = sumW(w, [...RET_ROWS.map((r) => r.bal), ...RET.old.map((o) => o.bal)]);
       // "2x salary" style answers count as that many years of take home pay (estimate, screen only)
       const xs = (v) => { const m = /(\d+(?:\.\d+)?)\s*(x|times)/i.exec(v || ''); return m ? +m[1] * c[sp(INC.net, w)] * 12 : num(v); };
-      c['cov_' + w] = xs(st[sp(PRO.job, w)]) + xs(st[sp(PRO.outside, w)]);
+      c['cov_' + w] = xs(st[sp(PRO.job, w)]) + xs(st[sp(PRO.outside, w)]) + EXTRA_PLANS[w].reduce((a, x) => a + xs(st[x.amt]), 0);
       c['gap_' + w] = Math.max(0, c[sp(PRO.dTotal, w)] - c['cov_' + w]);
     }
     c.debtAll = debts + mort;
@@ -883,6 +902,16 @@ a{color:var(--tea);font-weight:600}
       const bal = num(st[r.bal]), pay = num(st[r.pay]);
       spill.push(`Debt: ${T(r.type) || 'Other'}${bal ? ', $' + fmt(bal) : ''}${T(r.rate) ? ' at ' + T(r.rate).replace(/%$/, '') + '%' : ''}${pay ? ', $' + fmt(pay) + ' a month' : ''}`);
     });
+    for (const w of (hasSpouse ? ['p', 's'] : ['p'])) {
+      const who = T(PEOPLE[w === 'p' ? 0 : 1].name).split(' ')[0] || (w === 'p' ? 'Prospect' : 'Spouse');
+      EXTRA_PLANS[w].forEach((x) => {
+        if (![x.amt, x.type, x.company, x.cost, x.had].some((k) => T(k))) return;
+        const amt = num(st[x.amt]), cost = num(st[x.cost]);
+        const bits = [T(x.type), T(x.company), amt && '$' + fmt(amt), cost && '$' + fmt(cost) + ' a month', T(x.had) && 'had it ' + T(x.had)].filter(Boolean).join(', ');
+        spill.push(`${who} plan ${x.n}: ${bits}`);
+      });
+    }
+    if (st._estateImp === 'Y') spill.push('Will or trust is important to them: introduce an estate attorney');
     if (c.kids && eduPer(st) !== 100000) spill.push(`Education figured at $${fmt(eduPer(st))} per kid`);
     // long text groups
     for (const g of GROUPS) {
@@ -967,7 +996,7 @@ a{color:var(--tea);font-weight:600}
     return st;
   }
 
-  root.FNA = { DEPS, EXTRA_DEPS, depFlag, EDU_PRESETS, EXTRA_DEBTS, ALL_DEBTS, eduPer, sp, PEOPLE, RET_ROWS, RET, INC, PRO, DEBT_ROWS, GOALS, PROTECT_Q, EXP, COMMIT, commitText, EVENTS, INTRO_ROWS, PARTNER, introCount, theirEvents, RETURN, NOTES, RECS, HEADER, CHOICES, DATES, GROUPS, MONEY, PAGE4, num, fmt, compute, ageFrom, toPdfSpec, fromPdfValues, eduAuto };
+  root.FNA = { DEPS, EXTRA_DEPS, EXTRA_PLANS, UW_GUIDES, depFlag, EDU_PRESETS, EXTRA_DEBTS, ALL_DEBTS, eduPer, sp, PEOPLE, RET_ROWS, RET, INC, PRO, DEBT_ROWS, GOALS, PROTECT_Q, EXP, COMMIT, commitText, EVENTS, INTRO_ROWS, PARTNER, introCount, theirEvents, RETURN, NOTES, RECS, HEADER, CHOICES, DATES, GROUPS, MONEY, PAGE4, num, fmt, compute, ageFrom, toPdfSpec, fromPdfValues, eduAuto };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 <script>/* Fills the original FNA Intake PDF with app values using pdf-lib.
@@ -1615,7 +1644,9 @@ a{color:var(--tea);font-weight:600}
     const wrap = type === 'money' ? 'money' : type === 'pct' ? 'pct' : '';
     const im = ['money', 'num', 'pct'].includes(type) ? ' inputmode="decimal"' : type === 'date' ? ' inputmode="numeric" maxlength="10"' : '';
     const attrs = `data-k="${esc(key)}" data-t="${type}" placeholder="${esc(o.ph || (type === 'date' ? 'MM/DD/YYYY' : ''))}"${im} aria-label="${esc(o.reg || o.label || key)}"`;
-    const el = o.area ? `<textarea ${attrs} rows="${o.rows || 3}" spellcheck="true"></textarea>` : `<input ${attrs} autocomplete="off" spellcheck="${type === 'text'}">`;
+    // free text answers wrap and grow as you type; numbers, dates, email stay one line
+    const one = !o.area && type === 'text' && !o.short && !o.cal;
+    const el = o.area ? `<textarea ${attrs} rows="${o.rows || 3}" spellcheck="true"></textarea>` : one ? `<textarea ${attrs} rows="1" class="one" spellcheck="true"></textarea>` : `<input ${attrs} autocomplete="off" spellcheck="${type === 'text'}">`;
     const cal = o.cal ? `<button type="button" class="calbtn" data-cal="${esc(key)}" title="Pick from a calendar" aria-label="Pick a date from a calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button><input type="date" class="calpick" data-calfor="${esc(key)}" tabindex="-1" aria-hidden="true">` : '';
     const box = `<div class="in ${wrap} ${o.cal ? 'hascal' : ''}">${el}${cal}</div>`;
     return o.label ? `<div class="fld ${o.cls || ''}"><label class="${o.ask ? 'ask' : ''}">${o.label}</label>${box}</div>` : box;
@@ -1676,7 +1707,7 @@ a{color:var(--tea);font-weight:600}
   function render() {
     const html = [
       S_('household', 'Household', () => section('household', '01', 'Household', 'Who is at the <em>table</em>', `
-        <div class="grid g3">${inp(F.HEADER.agent, { label: 'Agent(s)', ph: 'Your name and your trainer' })}${inp(F.HEADER.date[0], { label: 'Date', type: 'date' })}${inp(F.HEADER.email, { label: 'Email', ph: 'name@email.com' })}</div>
+        <div class="grid g3">${inp(F.HEADER.agent, { label: 'Agent(s)', ph: 'Your name and your trainer' })}${inp(F.HEADER.date[0], { label: 'Date', type: 'date' })}${inp(F.HEADER.email, { label: 'Email', ph: 'name@email.com', short: true })}</div>
         <h3>People</h3>
         <div class="people">
           <div class="hd"></div><div class="hd">Name</div><div class="hd">M / F</div><div class="hd">Date of birth</div><div class="hd">Age</div>
@@ -1741,6 +1772,7 @@ a{color:var(--tea);font-weight:600}
 
       S_('debt', 'Estate and debt', () => section('debt', '05', 'Estate and debt', 'Estate and <em>debt</em>', `
         <div class="grid g2" style="max-width:640px">${yn('Will Y', '&ldquo;Do you have a Will?&rdquo;')}${yn('Trust Y', '&ldquo;How about a Living Trust?&rdquo;')}</div>
+        <div style="max-width:640px">${yn('_estateImp', '&ldquo;Is that important to you?&rdquo; <span class="tip">(having a Will or Trust in place)</span>')}<p class="tip estateflag" data-estate hidden>Flag: introduce them to an estate attorney. This prints in Notes.</p></div>
         <div style="height:18px"></div>
         ${Q('Any debts you&rsquo;re working towards paying off?', '(Mortgage, car loan, student loan, credit cards, personal loans, etc.)')}
         <div class="debt"><div class="hd">Type of debt</div><div class="hd">Balance</div><div class="hd">Interest rate</div><div class="hd">Monthly payment</div>
@@ -1772,6 +1804,12 @@ a{color:var(--tea);font-weight:600}
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${seg(sp(F.PRO.type, w), [['Term', 'Term'], ['Universal', 'Universal'], ['IUL', 'IUL'], ['Whole', 'Whole']], { reg: 'Plan type', who: w })}</div>
           <div class="grid g3" style="margin-top:12px;grid-template-columns:96px minmax(0,1.3fr) minmax(0,1fr)">${inp(sp(F.PRO.termYrs, w), { label: 'If term, # of years?', ask: true, type: 'num', who: w, reg: 'Term years' })}${inp(sp(F.PRO.company, w), { label: '&ldquo;What company?&rdquo;', ask: true, who: w, reg: 'Company' })}${inp(sp(F.PRO.cost, w), { label: '&ldquo;How much do you pay each month for it?&rdquo;', ask: true, type: 'money', who: w, reg: 'Monthly cost of plan' })}</div>
           <div class="grid g2" style="margin-top:12px">${inp(sp(F.PRO.howLong, w), { label: '&ldquo;How long have you had it for?&rdquo;', ask: true, who: w, reg: 'Had it how long' })}</div>
+          ${F.EXTRA_PLANS[w].map((x, i) => `<div class="plan" data-plan="${w}${i}" hidden><div class="planhd">Plan ${x.n}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${seg(x.type, [['Term', 'Term'], ['Universal', 'Universal'], ['IUL', 'IUL'], ['Whole', 'Whole']], { reg: `Plan ${x.n} type`, who: w })}</div>
+            <div class="grid g2" style="margin-top:10px">${inp(x.amt, { label: 'Coverage amount', type: 'money', who: w, reg: `Plan ${x.n} coverage` })}${inp(x.company, { label: 'Company', who: w, reg: `Plan ${x.n} company` })}</div>
+            <div class="grid g2" style="margin-top:10px">${inp(x.cost, { label: 'Per month', type: 'money', who: w, reg: `Plan ${x.n} monthly cost` })}${inp(x.had, { label: 'Had it how long', who: w, reg: `Plan ${x.n} had it how long` })}</div>
+          </div>`).join('')}
+          <div class="depfoot" style="margin-left:0"><button type="button" class="btn sm ghost" data-plan-add="${w}">+ Add another plan</button><span class="tip" style="margin-left:10px">Extra plans count toward Has and print in Notes.</span></div>
           ${Q('What are your thoughts on the plan you have?', '(Dissatisfied? Who helped them get it?)')}
           ${inp(sp(F.PRO.thoughts[0], w), { area: true, rows: 2, who: w, reg: 'Thoughts on current plan' })}
           <h3>DIME: how much protection is needed</h3>
@@ -1802,7 +1840,7 @@ a{color:var(--tea);font-weight:600}
           <div class="hw" style="margin-top:8px">${inp(sp(F.PRO.ft, w), { label: 'Ft', type: 'num', who: w, reg: 'Height feet' })}${inp(sp(F.PRO.inch, w), { label: 'In', type: 'num', who: w, reg: 'Height inches' })}${inp(sp(F.PRO.wt, w), { label: 'Weight (lbs)', type: 'num', who: w, reg: 'Weight' })}</div>
           <div style="margin-top:6px">${yn(sp(F.PRO.ltc[0], w), '&ldquo;Do you have Long-Term Care protection?&rdquo;', w)}</div>
           <div class="grid g2">${inp(sp(F.PRO.ltcCov, w), { label: 'Coverage amount', type: 'money', who: w, reg: 'LTC coverage' })}${inp(sp(F.PRO.ltcPrem, w), { label: 'Premium per month', type: 'money', who: w, reg: 'LTC monthly cost' })}</div>
-          <p class="tip" style="margin:10px 0 0"><a href="https://drive.google.com/file/d/1HGRhQduKuMan6nqsaZAaVSwS1rFoeIX6/view?usp=drive_link" target="_blank" rel="noopener">NW underwriting guide</a></p>
+          <div class="uw" data-noring><span class="tip">Underwriting guide</span>${seg('_uw' + w, Object.keys(F.UW_GUIDES).map((k) => [k, k]))}<span class="tip" data-uw="${w}"></span></div>
         `))),
 
       S_('expenses', 'Expenses', () => section('expenses', '08', 'Expenses and savings', 'What is <em>left over</em>', `
@@ -1866,7 +1904,7 @@ a{color:var(--tea);font-weight:600}
         <h3>Recommendations</h3>
         <div class="grid g3">${F.RECS.map((r, i) => inp(r[0], { label: `Recommendation ${i + 1}`, area: true, rows: 4 })).join('')}</div>`)),
     ];
-    $('#main').innerHTML = '<div class="recent card" id="recent" hidden></div>' + html.join('') + `<p class="footer-note">Saved only on this device. Nothing leaves this computer unless you download the PDF.</p>`;
+    $('#main').innerHTML = html.join('') + `<p class="footer-note">Saved only on this device. Nothing leaves this computer unless you download the PDF.</p>`;
     $('#nav').innerHTML = SECTIONS.map((s, i) => `<a href="#${s.id}" data-nav="${s.id}"><span class="ring" data-ring="${s.id}"></span><span>${s.name}</span></a>`).join('');
   }
   const EXP_ = F.EXP;
@@ -1969,10 +2007,22 @@ a{color:var(--tea);font-weight:600}
         const need = c[sp(F.PRO.dTotal, w)], have = c['cov_' + w];
         gap.innerHTML = need ? `<span>Has <b>$${F.fmt(have)}</b></span><span>&middot;</span><span>Gap <b class="${c['gap_' + w] ? 'bad' : ''}">$${F.fmt(c['gap_' + w])}</b></span>` : '';
       }
+      // extra plans: show the ones in use, plus any added with the button
+      const XP = F.EXTRA_PLANS[w];
+      const used = XP.reduce((a, x, i) => ([x.amt, x.type, x.company, x.cost, x.had].some((k) => String(S[k] || '').trim()) ? i + 1 : a), 0);
+      const nShow = Math.min(XP.length, Math.max(used, S['_planShow' + w] || 0));
+      XP.forEach((x, i) => { const el = $(`[data-plan="${w}${i}"]`); if (el) el.hidden = i >= nShow; });
+      const pb = $(`[data-plan-add="${w}"]`); if (pb) pb.closest('.depfoot').hidden = nShow >= XP.length;
+      // underwriting guide for the carrier they pick (Nationwide until they pick)
+      const car = S['_uw' + w] || 'Nationwide', url = F.UW_GUIDES[car];
+      $$(`[data-seg="_uw${w}"] button`).forEach((b) => b.classList.toggle('on', b.dataset.v === car));
+      const ug = $(`[data-uw="${w}"]`);
+      if (ug) ug.innerHTML = url ? `<a href="${esc(url)}" target="_blank" rel="noopener">Open the ${esc(car)} guide</a>` : `${esc(car)} guide link not added yet`;
       // highlight the pay row they use
       const f = S[sp(F.INC.freq[0], w)];
       $$(`.col-${w} [data-pay]`).forEach((r) => { r.classList.toggle('hot', r.dataset.pay === f); r.classList.toggle('dim', !!f && r.dataset.pay !== f && !F.num(S[sp({ b: F.INC.biw, s: F.INC.semi, w: F.INC.week, m: F.INC.month }[r.dataset.pay], w)])); });
     }
+    { const ef = $('[data-estate]'); if (ef) ef.hidden = S._estateImp !== 'Y'; }
     // sentences
     const left = c[EXP_.disc];
     $('[data-left]').innerHTML = S[EXP_.expenses] || c[EXP_.combined] ? `Based on what is coming in and what is going out, it looks like you should have about <b>$${F.fmt(left)}</b> left over at the end of the month. Does that sound about right?` : '';
@@ -1982,7 +2032,6 @@ a{color:var(--tea);font-weight:600}
     intros();
     deps();
     debts();
-    recent();
     drawMulti();
     tzCard();
     padSync();
@@ -2037,23 +2086,11 @@ a{color:var(--tea);font-weight:600}
     S._debtShow = n + 1; save(); debts();
     const el = $(`[data-k="${CSS.escape(XD[n].type)}"]`); if (el) el.focus();
   }
-  // a blank new intake shows the saved clients on top, so going back is one tap
-  function recent() {
-    const box = $('#recent'); if (!box) return;
-    const list = Object.entries(DB.clients).filter(([id]) => id !== CUR).sort((a, b) => b[1].updated - a[1].updated);
-    const fresh = !DB.clients[CUR];
-    box.hidden = !fresh || !list.length;
-    if (box.hidden) return;
-    box.innerHTML = `<div class="rhead"><b>Pick up a saved client</b><span class="tip">or start typing below for a new one</span></div><div class="rlist">${list.slice(0, 6).map(([id, c]) => {
-      const st = c.state, nm = st.PROSPECT ? st.PROSPECT + (st['Spouse Name'] && st._hasSpouse !== false ? ' & ' + st['Spouse Name'].split(' ')[0] : '') : 'Unnamed client';
-      return `<button type="button" class="rcl" data-open="${id}"><span class="nm">${esc(nm)}</span><span class="dt">${new Date(c.updated).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></button>`;
-    }).join('')}${list.length > 6 ? `<button type="button" class="rcl more" id="recentAll"><span class="nm">All ${list.length} clients</span></button>` : ''}</div>`;
-  }
   // text boxes grow with the answer
   function grow(el) {
     if (!el.offsetParent || el.clientWidth < 80) return;
     el.style.height = 'auto';
-    el.style.height = Math.max(el.scrollHeight + 2, 72) + 'px';
+    el.style.height = Math.max(el.scrollHeight + 2, el.classList.contains('one') ? 40 : 72) + 'px';
   }
 
   /* ---------- introductions (Cates) ---------- */
@@ -2115,7 +2152,7 @@ a{color:var(--tea);font-weight:600}
     let tot = 0, got = 0;
     for (const s of SECTIONS) {
       const sec = document.getElementById(s.id); if (!sec) continue;
-      let keys = $$('[data-k],[data-seg],[data-bool],[data-multi]', sec).filter((el) => (hasSpouse() || !el.closest('.col-s')) && !el.closest('[data-noring]') && !el.closest('[data-dep][hidden]') && !el.closest('[data-xdebt][hidden]')).map((el) => el.dataset.k || el.dataset.seg || el.dataset.bool || el.dataset.multi);
+      let keys = $$('[data-k],[data-seg],[data-bool],[data-multi]', sec).filter((el) => (hasSpouse() || !el.closest('.col-s')) && !el.closest('[data-noring]') && !el.closest('[data-dep][hidden]') && !el.closest('[data-xdebt][hidden]') && !el.closest('[data-plan][hidden]')).map((el) => el.dataset.k || el.dataset.seg || el.dataset.bool || el.dataset.multi);
       keys = [...new Set(keys)];
       const filled = keys.filter((k) => S[k] !== undefined && S[k] !== '' && S[k] !== false).length;
       tot += keys.length; got += filled;
@@ -2172,7 +2209,15 @@ a{color:var(--tea);font-weight:600}
     if (ia) { addIntro(ia.dataset.introAdd); return; }
     if (e.target.closest('#depAdd')) { addDep(); return; }
     if (e.target.closest('#debtAdd')) { addDebt(); return; }
-    if (e.target.closest('#recentAll')) { openClients(); return; }
+    const pa = e.target.closest('[data-plan-add]');
+    if (pa) {
+      const w = pa.dataset.planAdd, XP = F.EXTRA_PLANS[w];
+      const n = $$(`[data-plan^="${w}"]`).filter((el) => !el.hidden).length; if (n >= XP.length) return;
+      S['_planShow' + w] = n + 1; save(); update();
+      const el = $(`[data-k="${CSS.escape(XP[n].amt)}"]`); if (el) el.focus();
+      setSpeaker(w, true);
+      return;
+    }
     const ma = e.target.closest('[data-multi-add]');
     if (ma) {
       const k = ma.dataset.multiAdd, rows = getRows(k); rows.push(''); setRows(k, rows);
@@ -2385,7 +2430,9 @@ a{color:var(--tea);font-weight:600}
     }
     if (e.key === '/' && !typing) { e.preventDefault(); $('#cap').focus(); return; }
     if (e.key === 'Enter' && document.activeElement.id === 'cap') { e.preventDefault(); capture(); }
-    if (e.key === 'Enter' && typing && document.activeElement.tagName === 'INPUT' && document.activeElement.id !== 'cap' && document.activeElement.id !== 'palIn') {
+    const oneLine = document.activeElement.tagName === 'INPUT' || document.activeElement.classList.contains('one');
+    if (e.key === 'Enter' && !e.shiftKey && typing && oneLine && document.activeElement.id !== 'cap' && document.activeElement.id !== 'palIn') {
+      if (document.activeElement.classList.contains('one')) e.preventDefault();
       // Enter moves to the next box, like a paper form
       const all = $$('#main input, #main textarea').filter((x) => x.offsetParent && !x.classList.contains('calpick'));
       const i = all.indexOf(document.activeElement); if (i >= 0 && all[i + 1]) { e.preventDefault(); all[i + 1].focus(); }
@@ -2425,7 +2472,7 @@ a{color:var(--tea);font-weight:600}
   $$('section.card').forEach((s) => io.observe(s));
   // rotating examples in the capture bar
   const ex = ['she takes home 2,100 twice a month', 'his 401k is 85k and he puts in 6%', 'car loan 18k at 6.9%, 420 a month', 'son Leo, 8 years old', 'term plan 500k with State Farm, 45 a month', '5\'10, 185 lbs, nonsmoker', 'expenses about 6,800 a month', 'come back Tuesday at 7pm'];
-  let exI = 0; setInterval(() => { const c = $('#cap'); if (c && !c.value && document.activeElement !== c) { exI = (exI + 1) % ex.length; c.placeholder = `Type what you hear... "${ex[exI]}"`; } }, 3800);
+  let exI = 0; setInterval(() => { const c = $('#cap'); if (c && !c.value && document.activeElement !== c) { exI = (exI + 1) % ex.length; c.placeholder = 'Type in additional details here'; } }, 3800);
   window.__fna = { get state() { return S; }, capture: (t) => { $('#cap').value = t; capture(); }, makePdf, F };
 })();
 </script>
