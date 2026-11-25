@@ -458,6 +458,29 @@ a{color:var(--tea);font-weight:600}
 .rcl .dt{font-size:11.5px;color:var(--dim)}
 .rcl.more .nm{color:var(--tea)}
 @container (max-width:560px){.people .flags{grid-column:1/-1}}
+
+/* floating notepad: always there, same text as the Notes box in section 10 */
+.padbtn{position:fixed;left:22px;bottom:26px;z-index:58;display:flex;align-items:center;gap:8px;height:46px;padding:0 16px 0 14px;border-radius:999px;border:0;cursor:pointer;background:var(--teaG);color:#fff;font-size:14px;font-weight:700;box-shadow:0 16px 30px -12px rgba(14,124,122,.75);transition:transform .15s}
+.padbtn:active{transform:scale(.95)}
+.padbtn svg{width:18px;height:18px}
+.padbtn .dot{width:8px;height:8px;border-radius:50%;background:#ffd27a;box-shadow:0 0 0 2px rgba(255,255,255,.6);display:none}
+.padbtn.has .dot{display:block}
+.padbtn.on{background:#fff;color:var(--tea);box-shadow:0 0 0 1.5px var(--tea2),0 16px 30px -12px rgba(14,60,62,.45)}
+.pad{position:fixed;left:22px;bottom:84px;z-index:58;width:min(380px,calc(100vw - 32px));display:flex;flex-direction:column;border-radius:18px;background:#fffdf6;box-shadow:0 0 0 1px rgba(14,90,88,.1),0 34px 70px -24px rgba(14,60,62,.55);transform:translateY(12px) scale(.97);opacity:0;pointer-events:none;transition:transform .28s var(--ease),opacity .2s}
+.pad.on{transform:none;opacity:1;pointer-events:auto}
+.pad header{display:flex;align-items:center;gap:10px;padding:14px 16px 8px}
+.pad header b{font-family:var(--serif);font-style:italic;font-size:20px;color:var(--ink)}
+.pad header .who{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tea)}
+.pad header .x{margin-left:auto;width:30px;height:30px;border-radius:9px;border:0;background:transparent;color:var(--dim);font-size:20px;cursor:pointer}
+.pad header .x:hover{background:var(--teabg);color:var(--ink)}
+.pad textarea{margin:0 14px;min-height:190px;max-height:46vh;resize:vertical;padding:12px 14px;border-radius:12px;border:1px solid #efe6c8;background:repeating-linear-gradient(#fffdf6,#fffdf6 25px,#f1ead3 26px) 0 12px/100% 26px local;outline:none;font-size:14.5px;line-height:26px;color:var(--ink)}
+.pad textarea:focus{border-color:var(--tea2);box-shadow:0 0 0 4px rgba(58,166,162,.14)}
+.pad footer{display:flex;align-items:center;gap:10px;padding:10px 16px 14px}
+.pad footer .tip{flex:1}
+/* bottom left, in the open space under the section list; on narrower screens the type bar fills the bottom, so the button sits just above it */
+@media (max-width:1250px){.padbtn{left:16px;bottom:108px}.pad{left:16px;bottom:166px}}
+@media (max-width:600px){.padbtn{bottom:96px}.pad{bottom:150px}}
+@media print{.padbtn,.pad{display:none}}
 </style>
 </head>
 <body>
@@ -500,6 +523,12 @@ a{color:var(--tea);font-weight:600}
 </div>
 
 <div class="toasts" id="toasts"></div>
+<button type="button" class="padbtn" id="padBtn" title="Notes (Option + N)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Notes<i class="dot"></i></button>
+<div class="pad" id="pad" role="dialog" aria-label="Notes">
+  <header><b>Notes</b><span class="who" id="padWho"></span><button type="button" class="x" id="padX" title="Close (Esc)">&times;</button></header>
+  <textarea id="padTxt" spellcheck="true" placeholder="Type anything you hear. It shows up in Notes at the end of the intake and prints on the PDF."></textarea>
+  <footer><span class="tip">Same notes as section 10</span><button type="button" class="btn sm ghost" id="padGo">Go to Notes</button></footer>
+</div>
 <div class="veil" id="veil"></div>
 <div class="palette" id="pal"><input id="palIn" placeholder="Find a box... try &quot;spouse 401k&quot; or &quot;mortgage&quot;" autocomplete="off"><div class="res" id="palRes"></div></div>
 <aside class="drawer" id="drawer">
@@ -1956,6 +1985,7 @@ a{color:var(--tea);font-weight:600}
     recent();
     drawMulti();
     tzCard();
+    padSync();
     $$('#main textarea').forEach(grow);
     // names everywhere
     const nm = { p: (S.PROSPECT || '').trim(), s: (S['Spouse Name'] || '').trim() };
@@ -2254,6 +2284,25 @@ a{color:var(--tea);font-weight:600}
     setTimeout(() => { if (el.focus) el.focus({ preventScroll: true }); flash(k); }, 380);
   }
 
+  /* ---------- floating notepad: the Notes box, reachable from anywhere ---------- */
+  const NOTE = F.NOTES[0];
+  const padOn = () => $('#pad').classList.contains('on');
+  function padOpen(on) {
+    $('#pad').classList.toggle('on', on); $('#padBtn').classList.toggle('on', on);
+    DB.padOpen = on; persist();
+    if (on) { padSync(); setTimeout(() => { const t = $('#padTxt'); t.focus(); t.setSelectionRange(t.value.length, t.value.length); }, 60); }
+  }
+  function padSync() {
+    const t = $('#padTxt'); if (!t) return;
+    const v = String(S[NOTE] || '');
+    if (document.activeElement !== t && t.value !== v) t.value = v;
+    const nm = (S.PROSPECT || '').trim().split(/\s+/)[0];
+    $('#padWho').textContent = nm ? 'for ' + nm : '';
+    $('#padBtn').classList.toggle('has', !!v.trim());
+  }
+  // typing in the pad is typing in Notes: same key, same save, prints on the PDF Notes lines
+  document.addEventListener('input', (e) => { if (e.target.id !== 'padTxt') return; S[NOTE] = e.target.value; save(); paint([NOTE]); });
+
   /* ---------- find a field (Cmd/Ctrl K) ---------- */
   let palSel = 0, palList = [];
   function palOpen() { $('#veil').classList.add('on'); $('#pal').classList.add('on'); $('#palIn').value = ''; palFilter(); setTimeout(() => $('#palIn').focus(), 20); }
@@ -2326,6 +2375,8 @@ a{color:var(--tea);font-weight:600}
     const typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName);
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('#pal').classList.contains('on') ? palClose() : palOpen(); return; }
     if (e.altKey && e.code === 'KeyS') { e.preventDefault(); setSpeaker(speaker === 'p' ? 's' : 'p'); return; }
+    if (e.altKey && e.code === 'KeyN') { e.preventDefault(); padOpen(!padOn()); return; }
+    if (e.key === 'Escape' && padOn()) { padOpen(false); return; }
     if (e.key === 'Escape') { closeVeil(); if (document.activeElement.id === 'cap') document.activeElement.blur(); return; }
     if ($('#pal').classList.contains('on')) {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); palSel = Math.max(0, Math.min(palList.length - 1, palSel + (e.key === 'ArrowDown' ? 1 : -1))); $$('#palRes .r').forEach((r, i) => r.classList.toggle('on', i === palSel)); const on = $('#palRes .r.on'); if (on) on.scrollIntoView({ block: 'nearest' }); }
@@ -2358,6 +2409,10 @@ a{color:var(--tea);font-weight:600}
     window.location.href = `../fna-report/index.html?intake=${encodeURIComponent(CUR)}`;
   });
   $('#newBtn').addEventListener('click', newClient);
+  $('#padBtn').addEventListener('click', () => padOpen(!padOn()));
+  $('#padX').addEventListener('click', () => padOpen(false));
+  $('#padGo').addEventListener('click', () => { padOpen(false); jump(NOTE); });
+  if (DB.padOpen) padOpen(true);
   $('#clientsBtn').addEventListener('click', openClients);
   $('#closeDrawer').addEventListener('click', closeVeil);
   $('#veil').addEventListener('click', closeVeil);
