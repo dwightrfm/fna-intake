@@ -434,6 +434,30 @@ a{color:var(--tea);font-weight:600}
 .tzside .s{font-size:13px;color:var(--mut);margin-top:3px}
 .tzempty{align-self:center;font-size:13px;color:var(--dim)}
 @container (max-width:560px){.depfoot{margin-left:0}.tzcard{grid-template-columns:minmax(0,1fr)}.retgrid .fld:last-child{grid-column:1/-1}}
+
+/* 2026-11-25: Edgar's edits. The paper form's questions, more kids and debts, education per kid, saved clients on top */
+.fld>label.ask{font-family:var(--serif);font-style:italic;font-size:15px;font-weight:500;line-height:1.35;color:#2b3d42}
+.say.q{margin:20px 0 8px;font-size:15.5px}
+.qnote{margin:-5px 0 8px}
+.people .flags{grid-column:2/-1;display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 4px}
+.people .flags:empty{display:none}
+.chip.sm{height:28px;padding:0 11px;font-size:11.5px}
+.chip.sm .ck{width:12px;height:12px;margin-right:6px}
+.debt [data-xdebt][hidden]{display:none}
+.edupre{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;margin:10px 0 2px}
+.edupre .seg button{height:30px;padding:0 12px;font-size:12px}
+[data-min] .amt{font-family:var(--sans);font-style:normal;font-weight:800;color:var(--tea);background:var(--teabg);padding:1px 8px;border-radius:8px}
+[data-min]::before,[data-min]::after{content:none}
+.recent{padding:18px 22px}
+.recent .rhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.recent .rhead b{font-size:15px}
+.recent .rlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.rcl{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:11px 14px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.7);cursor:pointer;text-align:left;transition:border-color .2s,background .2s}
+.rcl:hover{border-color:var(--tea2);background:var(--teabg)}
+.rcl .nm{font-size:14px;font-weight:700;color:var(--ink)}
+.rcl .dt{font-size:11.5px;color:var(--dim)}
+.rcl.more .nm{color:var(--tea)}
+@container (max-width:560px){.people .flags{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -445,12 +469,12 @@ a{color:var(--tea);font-weight:600}
   <div class="grow"></div>
   <button class="btn ghost" id="findBtn" title="Find any box (Ctrl or Cmd + K)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span class="lbl-hide">Find a box</span><span class="kbd lbl-hide">&#8984;K</span></button>
   <button class="btn ghost mobile-math" id="mathBtn">The math</button>
-  <button class="btn ghost" id="clientsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1"/><circle cx="9" cy="7" r="3.5"/><path d="M22 19v-1a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg><span class="lbl-hide">Clients</span></button>
+  <button class="btn ghost" id="clientsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1"/><circle cx="9" cy="7" r="3.5"/><path d="M22 19v-1a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg><span class="lbl-keep">Clients</span></button>
   <button class="btn" id="newBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg><span class="lbl-hide">New</span></button>
   <button class="btn ghost" id="openBtn" title="Load answers from a filled FNA Intake PDF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M12 4v11M7 10l5 5 5-5"/></svg><span class="lbl-hide">Open PDF</span></button>
   <input type="file" id="pdfFile" accept="application/pdf,.pdf" hidden>
   <button class="btn" id="pvBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="lbl-hide">Preview PDF</span></button>
-  <button class="btn" id="rptBtn" title="Open this client in the FNA Report app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg><span class="lbl-hide">Build report</span></button>
+  <button class="btn" id="rptBtn" hidden title="Open this client in the FNA Report app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg><span class="lbl-hide">Build report</span></button>
   <button class="btn primary" id="dlBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4v12M6 11l6 6 6-6M4 20h16"/></svg><span class="lbl-hide">Download PDF</span></button>
 </header>
 
@@ -519,6 +543,14 @@ a{color:var(--tea);font-weight:600}
     { id: 'd4', name: 'Text8', sex: 'Dependent2 M', sexF: 'Dependent2 F', age: 'Text12', dob: ['Text11', 'Text60', 'Text61'] },
   ];
 
+  /* Dependents 5 to 8 and debts 7 to 10 have no box on the paper form. They live in
+     app-only keys (leading "_") and print on the Notes lines, so nothing is lost. */
+  const EXTRA_DEPS = [5, 6, 7, 8].map((n) => ({ id: 'd' + n, name: `_d${n} name`, sex: `_d${n} sex`, age: `_d${n} age`, dob: [`_d${n} dob`], extra: true }));
+  const DEPS = [...PEOPLE.slice(2), ...EXTRA_DEPS];
+  // per child: "_notdep{i}" = not a dependent (separated, grown, lives elsewhere); "_nocol{i}" = leave out of Education
+  const depFlag = (i) => ({ notDep: `_notdep${i}`, noCol: `_nocol${i}` });
+  const EDU_PRESETS = [100000, 125000, 150000];
+
   const RET_ROWS = [
     { label: '401(k)', type: null, bal: 'Text19', cpct: 'Text32', camt: 'Text33', mpct: 'Text34', mamt: 'Text35' },
     { label: '403(b)', type: null, bal: 'Text36', cpct: 'Text37', camt: 'Text38', mpct: 'Text39', mamt: 'Text40' },
@@ -575,6 +607,8 @@ a{color:var(--tea);font-weight:600}
     { type: 'D5', bal: 'B5', rate: 'I5', pay: 'M5' },
     { type: 'D1', bal: 'B1', rate: 'I6', pay: 'M6' },
   ];
+  const EXTRA_DEBTS = [7, 8, 9, 10].map((n) => ({ type: `_x${n} type`, bal: `_x${n} bal`, rate: `_x${n} rate`, pay: `_x${n} pay`, extra: true }));
+  const ALL_DEBTS = [...DEBT_ROWS, ...EXTRA_DEBTS];
 
   const GOALS = [
     ['Pay off debt', 'Pay off debt'], ['Retirement', 'Retirement'], ['Buy Property', 'Buy property'],
@@ -689,8 +723,10 @@ a{color:var(--tea);font-weight:600}
     const n = Number(s);
     return isNaN(n) ? 0 : n * mult;
   };
-  const kidsCount = (st) => PEOPLE.slice(2).filter((p) => (st[p.name] || '').trim()).length;
-  const eduAuto = (st) => kidsCount(st) * 100000;
+  // kids who count toward Education: named, and not switched off with "No college money"
+  const kidsCount = (st) => DEPS.filter((p, i) => String(st[p.name] || '').trim() && st[depFlag(i).noCol] !== true).length;
+  const eduPer = (st) => num(st._eduPer) || 100000;
+  const eduAuto = (st) => kidsCount(st) * eduPer(st);
 
   function compute(st, hasSpouse = true) {
     const c = {};
@@ -702,7 +738,7 @@ a{color:var(--tea);font-weight:600}
       const net = Math.round(g(INC.biw) * 26 / 12 + g(INC.semi) * 2 + g(INC.week) * 52 / 12 + g(INC.month) + g(INC.other[0].amt) + g(INC.other[1].amt));
       c[sp(INC.biwM, w)] = biwM; c[sp(INC.semiM, w)] = semiM; c[sp(INC.weekM, w)] = weekM; c[sp(INC.net, w)] = net;
     }
-    const debts = Math.round(['B1', 'B2', 'B3', 'B4', 'B5'].reduce((a, k) => a + num(st[k]), 0));
+    const debts = Math.round(['B1', 'B2', 'B3', 'B4', 'B5', ...EXTRA_DEBTS.map((r) => r.bal)].reduce((a, k) => a + num(st[k]), 0));
     const mort = num(st.B6);
     const eduDefault = eduAuto(st);
     for (const w of ['p', 's']) {
@@ -735,9 +771,10 @@ a{color:var(--tea);font-weight:600}
       c['gap_' + w] = Math.max(0, c[sp(PRO.dTotal, w)] - c['cov_' + w]);
     }
     c.debtAll = debts + mort;
-    c.debtPay = DEBT_ROWS.reduce((a, r) => a + num(st[r.pay]), 0);
+    c.debtPay = ALL_DEBTS.reduce((a, r) => a + num(st[r.pay]), 0);
     c.kids = kidsCount(st);
     c.eduAuto = eduDefault;
+    c.eduPer = eduPer(st);
     return c;
   }
 
@@ -799,6 +836,25 @@ a{color:var(--tea);font-weight:600}
       put(k, t.slice(0, LONG_FIT - 14).replace(/\s+\S*$/, '') + '... (see notes)');
       spill.push(`${tag}: ${t}`);
     }
+    // what has no box on paper goes to the Notes lines
+    const T = (k) => String(st[k] || '').trim();
+    DEPS.forEach((p, i) => {
+      const nm = T(p.name); if (!nm) return;
+      const f = depFlag(i), tags = [];
+      if (st[f.notDep] === true) tags.push('not a dependent');
+      if (st[f.noCol] === true) tags.push('no college money');
+      if (p.extra) {
+        const age = T(p.age) || ageFrom(T(p.dob[0]));
+        const bits = [T(p.sex), T(p.dob[0]) && 'DOB ' + T(p.dob[0]), age && 'age ' + age].filter(Boolean).join(', ');
+        spill.push(`Dependent: ${nm}${bits ? ' (' + bits + ')' : ''}${tags.length ? ', ' + tags.join(', ') : ''}`);
+      } else if (tags.length) spill.push(`${nm}: ${tags.join(', ')}`);
+    });
+    EXTRA_DEBTS.forEach((r) => {
+      if (![r.type, r.bal, r.rate, r.pay].some((k) => T(k))) return;
+      const bal = num(st[r.bal]), pay = num(st[r.pay]);
+      spill.push(`Debt: ${T(r.type) || 'Other'}${bal ? ', $' + fmt(bal) : ''}${T(r.rate) ? ' at ' + T(r.rate).replace(/%$/, '') + '%' : ''}${pay ? ', $' + fmt(pay) + ' a month' : ''}`);
+    });
+    if (c.kids && eduPer(st) !== 100000) spill.push(`Education figured at $${fmt(eduPer(st))} per kid`);
     // long text groups
     for (const g of GROUPS) {
       g.forEach((n) => skip.add(n));
@@ -806,7 +862,7 @@ a{color:var(--tea);font-weight:600}
       if ((text || '').trim()) groups.push({ names: g, text });
     }
     // computed fields
-    const computedNames = Object.keys(c).filter((k) => /[A-Za-z]/.test(k) && !/^(ret_|cov_|gap_|savePct|debtAll|debtPay|kids|eduAuto)/.test(k));
+    const computedNames = Object.keys(c).filter((k) => /[A-Za-z]/.test(k) && !/^(ret_|cov_|gap_|savePct|debtAll|debtPay|kids|eduAuto|eduPer)/.test(k));
     for (const k of computedNames) {
       skip.add(k);
       if (!hasSpouse && k.endsWith('S') && k !== 'Text5') continue;
@@ -882,7 +938,7 @@ a{color:var(--tea);font-weight:600}
     return st;
   }
 
-  root.FNA = { sp, PEOPLE, RET_ROWS, RET, INC, PRO, DEBT_ROWS, GOALS, PROTECT_Q, EXP, COMMIT, commitText, EVENTS, INTRO_ROWS, PARTNER, introCount, theirEvents, RETURN, NOTES, RECS, HEADER, CHOICES, DATES, GROUPS, MONEY, PAGE4, num, fmt, compute, ageFrom, toPdfSpec, fromPdfValues, eduAuto };
+  root.FNA = { DEPS, EXTRA_DEPS, depFlag, EDU_PRESETS, EXTRA_DEBTS, ALL_DEBTS, eduPer, sp, PEOPLE, RET_ROWS, RET, INC, PRO, DEBT_ROWS, GOALS, PROTECT_Q, EXP, COMMIT, commitText, EVENTS, INTRO_ROWS, PARTNER, introCount, theirEvents, RETURN, NOTES, RECS, HEADER, CHOICES, DATES, GROUPS, MONEY, PAGE4, num, fmt, compute, ageFrom, toPdfSpec, fromPdfValues, eduAuto };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 <script>/* Fills the original FNA Intake PDF with app values using pdf-lib.
@@ -1469,10 +1525,10 @@ a{color:var(--tea);font-weight:600}
   try { DB = Object.assign(DB, JSON.parse(localStorage.getItem(LS) || '{}')); } catch (e) { /* private window */ }
   const persist = () => { try { localStorage.setItem(LS, JSON.stringify(DB)); } catch (e) { /* ignore */ } };
   const newId = () => 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const blank = () => ({ DATE: today(), TRAINEE: DB.agent || '', _hasSpouse: true, _log: [] });
-  let CUR = DB.current && DB.clients[DB.current] ? DB.current : null;
-  let S = CUR ? DB.clients[CUR].state : blank();
-  if (!CUR) { CUR = newId(); }
+  const blank = () => ({ DATE: today(), TRAINEE: DB.agent || '', _hasSpouse: true, _log: [], _eduPer: String(DB.eduPer || 100000) });
+  // opening the link always starts a new intake (Edgar, 11/24); saved clients show in the card at the top
+  let CUR = newId();
+  let S = blank();
   let speaker = 'p';
   const hasSpouse = () => S._hasSpouse !== false;
 
@@ -1482,11 +1538,43 @@ a{color:var(--tea);font-weight:600}
     clearTimeout(saveT);
     saveT = setTimeout(() => {
       const empty = Object.keys(S).filter((k) => !k.startsWith('_') && S[k] !== '' && S[k] != null && !['DATE', 'TRAINEE'].includes(k)).length === 0;
+      const isNew = !DB.clients[CUR];
       if (!empty || DB.clients[CUR]) { DB.clients[CUR] = { state: S, updated: Date.now() }; DB.current = CUR; }
       if (S.TRAINEE) DB.agent = S.TRAINEE;
+      if (S._eduPer) DB.eduPer = F.num(S._eduPer);
+      if (!empty) dupCheck(isNew);
       persist();
       $('#saveDot').classList.remove('busy');
     }, 350);
+  }
+
+  /* ---------- one person, one saved copy ---------- */
+  const keyName = (st) => String(st.PROSPECT || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const keyDob = (st) => String(st[F.PEOPLE[0].dob[0]] || '').trim();
+  // another saved client with the same prospect name (and the same birthday when both have one)
+  function twinOf(st, id) {
+    const n = keyName(st); if (!n) return null;
+    const hit = Object.entries(DB.clients).find(([k, c]) => k !== id && keyName(c.state) === n && (!keyDob(st) || !keyDob(c.state) || keyDob(st) === keyDob(c.state)));
+    return hit ? hit[0] : null;
+  }
+  let dupWarned = '';
+  function dupCheck() {
+    const tw = twinOf(S, CUR); if (!tw || dupWarned === CUR + '|' + tw) return;
+    dupWarned = CUR + '|' + tw;
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = `<div class="ttl">Already saved</div><ul><li>${esc(DB.clients[tw].state.PROSPECT)} is already in your clients. Keep working there so you do not end up with two copies.</li></ul><div class="acts"><button class="btn sm" data-a="open">Open the saved one</button><button class="btn sm ghost" data-a="keep">Keep both</button></div>`;
+    $('#toasts').appendChild(el);
+    el.addEventListener('click', (e) => {
+      const a = e.target.closest('[data-a]'); if (!a) return;
+      if (a.dataset.a === 'open') {
+        // move anything typed here onto the saved one, then drop this copy
+        const keep = DB.clients[tw].state;
+        for (const [k, v] of Object.entries(S)) if (!k.startsWith('_') && v !== '' && v != null && (keep[k] === undefined || keep[k] === '')) keep[k] = v;
+        delete DB.clients[CUR]; persist(); loadClient(tw);
+      }
+      el.classList.add('out'); setTimeout(() => el.remove(), 360);
+    });
   }
 
   /* ---------- field builders ---------- */
@@ -1501,8 +1589,10 @@ a{color:var(--tea);font-weight:600}
     const el = o.area ? `<textarea ${attrs} rows="${o.rows || 3}" spellcheck="true"></textarea>` : `<input ${attrs} autocomplete="off" spellcheck="${type === 'text'}">`;
     const cal = o.cal ? `<button type="button" class="calbtn" data-cal="${esc(key)}" title="Pick from a calendar" aria-label="Pick a date from a calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button><input type="date" class="calpick" data-calfor="${esc(key)}" tabindex="-1" aria-hidden="true">` : '';
     const box = `<div class="in ${wrap} ${o.cal ? 'hascal' : ''}">${el}${cal}</div>`;
-    return o.label ? `<div class="fld ${o.cls || ''}"><label>${o.label}</label>${box}</div>` : box;
+    return o.label ? `<div class="fld ${o.cls || ''}"><label class="${o.ask ? 'ask' : ''}">${o.label}</label>${box}</div>` : box;
   }
+  // a question read word for word from the paper form, then a small note in parentheses
+  const Q = (t, note) => `<p class="say sm q">${t}</p>${note ? `<p class="tip qnote">${note}</p>` : ''}`;
   const calc = (key, o = {}) => {
     const box = `<div class="calc ${o.big ? 'big' : ''}" data-c="${esc(key)}"><span class="v"></span><span class="t">${o.tag || 'auto'}</span></div>`;
     return o.label ? `<div class="fld"><label>${o.label}</label>${box}</div>` : box;
@@ -1519,7 +1609,7 @@ a{color:var(--tea);font-weight:600}
      S['_rows:' + key] keeps the lines as typed, blanks included. */
   function multi(key, o = {}) {
     reg(key, o.reg || o.label, o.who);
-    return `<div class="fld"><label>${o.label}</label><div class="multi" data-multi="${esc(key)}" data-ph="${esc(o.ph || '')}"></div>
+    return `<div class="fld"><label class="${o.ask ? 'ask' : ''}">${o.label}</label><div class="multi" data-multi="${esc(key)}" data-ph="${esc(o.ph || '')}"></div>
       <button type="button" class="btn sm ghost addrow" data-multi-add="${esc(key)}">+ Add another account</button></div>`;
   }
   const splitRows = (v) => String(v || '').split(/\s*;\s*/).map((x) => x.trim()).filter(Boolean);
@@ -1561,7 +1651,7 @@ a{color:var(--tea);font-weight:600}
         <h3>People</h3>
         <div class="people">
           <div class="hd"></div><div class="hd">Name</div><div class="hd">M / F</div><div class="hd">Date of birth</div><div class="hd">Age</div>
-          ${F.PEOPLE.map((p, i) => {
+          ${[...F.PEOPLE, ...F.EXTRA_DEPS].map((p, i) => {
             const role = i === 0 ? 'Prospect' : i === 1 ? 'Spouse' : 'Dependent ' + (i - 1);
             const cls = i === 0 ? 'p' : i === 1 ? 's' : '';
             const a = i === 1 ? 'data-spouse-row' : i > 1 ? `data-dep="${i - 2}"` : '';
@@ -1569,7 +1659,8 @@ a{color:var(--tea);font-weight:600}
               <div ${a}>${inp(p.name, { reg: role + ' name', ph: i < 2 ? 'First and last' : 'Name' })}</div>
               <div ${a}>${seg(p.sex, [['M', 'M'], ['F', 'F']], { yn: true, reg: role + ' M/F' })}</div>
               <div ${a}>${inp(p.dob[0], { type: 'date', reg: role + ' date of birth' })}</div>
-              <div ${a}>${inp(p.age, { type: 'num', reg: role + ' age' })}</div>`;
+              <div ${a}>${inp(p.age, { type: 'num', reg: role + ' age' })}</div>
+              <div ${a} class="flags" data-noring>${i > 1 ? flags(i - 2) : ''}</div>`;
           }).join('')}
         </div>
         <div class="depfoot"><button type="button" class="btn sm ghost" id="depAdd">+ Add another dependent</button></div>`, `<label class="toggle" id="spouseToggle"><span>Spouse / partner at the table</span><span class="sw"></span></label>`)),
@@ -1587,42 +1678,47 @@ a{color:var(--tea);font-weight:600}
         ${F.PROTECT_Q.map((q) => { reg(q.chk, q.tag); return `<div class="pq"><button type="button" class="cbx" data-bool="${esc(q.chk)}" aria-label="${esc(q.tag)}">${check}</button><div><div class="tag">${q.tag}</div><p class="say">${q.q}</p></div>${inp(q.ans, { reg: q.tag + ' answer', ph: 'Their answer' })}</div>`; }).join('')}
         <h3>Longer range</h3>
         <div class="longrange">
-          ${inp('Any additional goals in the next 3-7 years', { label: 'Any more goals in the next 3 to 7 years?', area: true, rows: 3, ph: 'Write it the way they say it. The box grows as you type.' })}
-          ${inp('How about 7+ years', { label: 'How about 7+ years?', area: true, rows: 3 })}
-          ${inp('Out of all of these goals what is most important t', { label: 'Which goal matters most? And why?', area: true, rows: 3 })}
+          ${inp('Any additional goals in the next 3-7 years', { label: '&ldquo;Any additional goals in the next 3 to 7 years?&rdquo;', ask: true, area: true, rows: 3, ph: 'Write it the way they say it. The box grows as you type.' })}
+          ${inp('How about 7+ years', { label: '&ldquo;How about 7+ years?&rdquo;', ask: true, area: true, rows: 3 })}
+          ${inp('Out of all of these goals what is most important t', { label: '&ldquo;Out of all of these goals, what is most important to you?&rdquo; And why?', ask: true, area: true, rows: 3 })}
         </div>`)),
 
       S_('retirement', 'Retirement', () => section('retirement', '04', 'Retirement', 'Retirement <em>goals</em>', `
         ${say('At what age would you like to be in a financial position to not have to work a job anymore? How much would you want coming in per month in retirement?', true)}
         ${duo((w) => `
           <div class="grid g2">${inp(sp(F.RET.age, w), { label: 'Done working at age', type: 'num', who: w, ph: '60' })}${inp(sp(F.RET.monthly, w), { label: 'Wants per month in retirement', type: 'money', who: w })}</div>
-          <h3>Current employer accounts</h3>
+          ${Q('Let&rsquo;s look at what you have saved so far... Do you have any current employer retirement accounts?')}
           ${inp(sp(F.RET.employer, w), { label: 'Employer', who: w })}
           <div style="height:10px"></div>
           <div class="acct"><div class="hd"></div><div class="hd">Balance</div><div class="hd">Contrib %</div><div class="hd">or $</div><div class="hd">Match %</div><div class="hd">or $</div></div>
           ${F.RET_ROWS.map((r) => `<div class="acct"><div class="lab">${r.type ? inp(sp(r.type, w), { reg: 'Other account type', who: w, ph: 'Type' }) : r.label}</div>
             ${inp(sp(r.bal, w), { type: 'money', reg: `${r.label} balance`, who: w })}${inp(sp(r.cpct, w), { type: 'pct', reg: `${r.label} contribution %`, who: w })}${inp(sp(r.camt, w), { type: 'money', reg: `${r.label} contribution $`, who: w })}${inp(sp(r.mpct, w), { type: 'pct', reg: `${r.label} employer match %`, who: w })}${inp(sp(r.mamt, w), { type: 'money', reg: `${r.label} employer match $`, who: w })}</div>`).join('')}
-          <h3>Old accounts and pension</h3>
+          ${Q('Any old retirement accounts?')}
           ${F.RET.old.map((o, i) => `<div class="grid g2" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);margin-bottom:8px">${inp(sp(o.emp, w), { label: i ? '' : 'Former employer', reg: `Old account ${i + 1} employer`, who: w })}${inp(sp(o.bal, w), { label: i ? '' : 'Balance', type: 'money', reg: `Old account ${i + 1} balance`, who: w })}</div>`).join('')}
+          ${Q('Do you have a pension?')}
           <div class="grid g3" style="grid-template-columns:minmax(0,1.5fr) 70px minmax(0,1fr)">${inp(sp(F.RET.pension.admin, w), { label: 'Pension: employer / admin', who: w })}${inp(sp(F.RET.pension.yrs, w), { label: 'Years', type: 'num', who: w, reg: 'Pension years of service' })}${inp(sp(F.RET.pension.monthly, w), { label: 'Monthly pension', type: 'money', who: w })}</div>
           <div style="height:10px"></div>
-          ${multi(sp(F.RET.taxFree, w), { label: 'Tax free accounts (type and balance)', who: w, ph: 'Roth IRA $20,000' })}
+          ${multi(sp(F.RET.taxFree, w), { label: '&ldquo;Any tax free retirement accounts?&rdquo; Type and balance', ask: true, reg: 'Tax free accounts (type and balance)', who: w, ph: 'Roth IRA $20,000' })}
           <div style="height:10px"></div>
-          ${inp(sp(F.RET.thoughts[0], w), { label: 'Thoughts on their retirement accounts (dissatisfied? why?)', area: true, rows: 2, who: w, reg: 'Thoughts on retirement accounts' })}
+          ${Q('What are your thoughts about your retirement accounts?', '(Find out if they&rsquo;re dissatisfied, and if so, why)')}
+          ${inp(sp(F.RET.thoughts[0], w), { area: true, rows: 2, who: w, reg: 'Thoughts on retirement accounts' })}
           <div style="height:10px"></div>
-          ${multi(sp(F.RET.other, w), { label: 'Other accounts (type and balance)', who: w, ph: 'Brokerage $15,000' })}
-          <div class="grid g2" style="margin-top:10px">${inp(sp(F.RET.checking, w), { label: 'Checking', type: 'money', who: w })}${inp(sp(F.RET.savings, w), { label: 'Savings', type: 'money', who: w })}</div>
-          <div style="margin-top:8px">${yn(sp(F.RET.marketLoss[0], w), 'Show a way to protect retirement savings from market loss?', w)}${yn(sp(F.RET.lifetime[0], w), 'Interested in lifetime income they can never outlive?', w)}</div>
+          ${multi(sp(F.RET.other, w), { label: '&ldquo;Any other accounts we haven&rsquo;t discussed?&rdquo; Type and balance', ask: true, reg: 'Other accounts (type and balance)', who: w, ph: 'Brokerage $15,000' })}
+          ${Q('How about regular bank or credit union accounts?')}
+          <div class="grid g2">${inp(sp(F.RET.checking, w), { label: 'Checking', type: 'money', who: w })}${inp(sp(F.RET.savings, w), { label: 'Savings', type: 'money', who: w })}</div>
+          <div style="margin-top:8px">${yn(sp(F.RET.marketLoss[0], w), '&ldquo;Would you like us to show you a way to protect your retirement savings from market loss?&rdquo;', w)}${yn(sp(F.RET.lifetime[0], w), '&ldquo;Are you interested in creating a lifetime income stream that you can never outlive?&rdquo;', w)}</div>
           <div class="total-line"><span class="l">Saved for retirement</span><span class="v" data-m="ret_${w}"></span></div>
         `)}`)),
 
       S_('debt', 'Estate and debt', () => section('debt', '05', 'Estate and debt', 'Estate and <em>debt</em>', `
-        <div class="grid g2" style="max-width:640px">${yn('Will Y', 'Do you have a will?')}${yn('Trust Y', 'How about a living trust?')}</div>
-        <h3>Debts they are working to pay off</h3>
+        <div class="grid g2" style="max-width:640px">${yn('Will Y', '&ldquo;Do you have a Will?&rdquo;')}${yn('Trust Y', '&ldquo;How about a Living Trust?&rdquo;')}</div>
+        <div style="height:18px"></div>
+        ${Q('Any debts you&rsquo;re working towards paying off?', '(Mortgage, car loan, student loan, credit cards, personal loans, etc.)')}
         <div class="debt"><div class="hd">Type of debt</div><div class="hd">Balance</div><div class="hd">Interest rate</div><div class="hd">Monthly payment</div>
-        ${F.DEBT_ROWS.map((r, i) => `${r.type ? inp(r.type, { reg: `Debt ${i + 1} type`, ph: ['', 'Car loan', 'Student loan', 'Credit card', 'Personal loan', 'Other'][i] }) : '<div class="fixed">Mortgage</div>'}
-          ${inp(r.bal, { type: 'money', reg: `${r.type ? 'Debt ' + (i + 1) : 'Mortgage'} balance` })}${inp(r.rate, { type: 'pct', reg: `${r.type ? 'Debt ' + (i + 1) : 'Mortgage'} interest rate` })}${inp(r.pay, { type: 'money', reg: `${r.type ? 'Debt ' + (i + 1) : 'Mortgage'} monthly payment` })}`).join('')}
+        ${F.ALL_DEBTS.map((r, i) => { const a = r.extra ? `data-xdebt="${i - F.DEBT_ROWS.length}"` : ''; const nm = r.type ? 'Debt ' + (i + 1) : 'Mortgage'; return `${r.type ? `<div ${a}>${inp(r.type, { reg: `${nm} type`, ph: ['', 'Car loan', 'Student loan', 'Credit card', 'Personal loan', 'Other'][i] || 'Other' })}</div>` : '<div class="fixed">Mortgage</div>'}
+          <div ${a}>${inp(r.bal, { type: 'money', reg: `${nm} balance` })}</div><div ${a}>${inp(r.rate, { type: 'pct', reg: `${nm} interest rate` })}</div><div ${a}>${inp(r.pay, { type: 'money', reg: `${nm} monthly payment` })}</div>`; }).join('')}
         </div>
+        <div class="depfoot" style="margin-left:0"><button type="button" class="btn sm ghost" id="debtAdd">+ Add another debt</button><span class="tip" style="margin-left:10px">Debts past the 6 lines on the paper print in Notes.</span></div>
         <div class="foot"><div class="m"><span>Total debt</span><b data-m="debtAll"></b></div><div class="m"><span>Debts besides the mortgage</span><b data-c="Text6"></b></div><div class="m"><span>Monthly payments</span><b data-m="debtPay"></b></div></div>`)),
 
       S_('income', 'Income', () => section('income', '06', 'Income', 'Take home <em>pay</em>', `
@@ -1632,49 +1728,60 @@ a{color:var(--tea);font-weight:600}
           <div style="height:12px"></div>
           ${[['b', 'Every 2 weeks', F.INC.biw, '&times; 26 &divide; 12', F.INC.biwM], ['s', 'Twice a month', F.INC.semi, '&times; 2', F.INC.semiM], ['w', 'Weekly', F.INC.week, '&times; 52 &divide; 12', F.INC.weekM], ['m', 'Once a month', F.INC.month, '', null]]
             .map(([v, l, key, op, out]) => `<div class="pay" data-pay="${v}"><div class="lab">${l}</div>${inp(sp(key, w), { type: 'money', reg: `${l} take home`, who: w })}<div class="op">${op || '='}</div>${out ? calc(sp(out, w), { tag: '/mo' }) : calc(sp(key, w) + '__echo', { tag: '/mo' })}</div>`).join('')}
-          <h3>Other income</h3>
+          ${Q('Do you have any other sources of income other than your job?')}
           ${F.INC.other.map((o, i) => `<div class="grid g2" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);margin-bottom:8px">${inp(sp(o.src, w), { label: i ? '' : 'Source', reg: `Other income ${i + 1} source`, who: w, ph: i ? '' : 'Rental, business, bonus' })}${inp(sp(o.amt, w), { label: i ? '' : 'Per month', type: 'money', reg: `Other income ${i + 1} per month`, who: w })}</div>`).join('')}
-          ${yn(sp(F.INC.passive[0], w), 'Any passive income streams?', w)}
+          ${yn(sp(F.INC.passive[0], w), '&ldquo;Do you currently have any passive income streams?&rdquo;', w)}
           <div class="total-line"><span class="l">Total net income per month</span><span class="v" data-c="${esc(sp(F.INC.net, w))}"></span></div>
         `)}`)),
 
       S_('protection', 'Protection', () => section('protection', '07', 'Protection', 'Protect the <em>family</em>', duo((w) => `
-          <div class="grid g2">${inp(sp(F.PRO.job, w), { label: 'Life coverage through job', type: 'money', who: w })}${inp(sp(F.PRO.outside, w), { label: 'Coverage outside the job', type: 'money', who: w })}</div>
-          <div style="height:10px"></div>
-          <div class="fld"><label>What type is it?</label><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${seg(sp(F.PRO.type, w), [['Term', 'Term'], ['Universal', 'Universal'], ['IUL', 'IUL'], ['Whole', 'Whole']], { reg: 'Plan type', who: w })}</div></div>
-          <div class="grid g3" style="margin-top:10px;grid-template-columns:80px minmax(0,1.4fr) minmax(0,1fr)">${inp(sp(F.PRO.termYrs, w), { label: 'Term yrs', type: 'num', who: w, reg: 'Term years' })}${inp(sp(F.PRO.company, w), { label: 'Company', who: w })}${inp(sp(F.PRO.cost, w), { label: 'Pays per month', type: 'money', who: w, reg: 'Monthly cost of plan' })}</div>
-          <div class="grid g2" style="margin-top:10px">${inp(sp(F.PRO.howLong, w), { label: 'Had it how long?', who: w })}</div>
-          <div style="height:10px"></div>
-          ${inp(sp(F.PRO.thoughts[0], w), { label: 'Thoughts on the plan they have (dissatisfied? who helped them?)', area: true, rows: 2, who: w, reg: 'Thoughts on current plan' })}
+          ${Q('Do you have Life Insurance protection through your job?')}
+          ${inp(sp(F.PRO.job, w), { label: 'Coverage amount', type: 'money', who: w, reg: 'Life coverage through job' })}
+          ${Q('How about any protection outside of what your job offers?')}
+          ${inp(sp(F.PRO.outside, w), { label: 'Coverage amount', type: 'money', who: w, reg: 'Coverage outside the job' })}
+          ${Q('Do you know what type it is?', '(term, universal, IUL, whole)')}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${seg(sp(F.PRO.type, w), [['Term', 'Term'], ['Universal', 'Universal'], ['IUL', 'IUL'], ['Whole', 'Whole']], { reg: 'Plan type', who: w })}</div>
+          <div class="grid g3" style="margin-top:12px;grid-template-columns:96px minmax(0,1.3fr) minmax(0,1fr)">${inp(sp(F.PRO.termYrs, w), { label: 'If term, # of years?', ask: true, type: 'num', who: w, reg: 'Term years' })}${inp(sp(F.PRO.company, w), { label: '&ldquo;What company?&rdquo;', ask: true, who: w, reg: 'Company' })}${inp(sp(F.PRO.cost, w), { label: '&ldquo;How much do you pay each month for it?&rdquo;', ask: true, type: 'money', who: w, reg: 'Monthly cost of plan' })}</div>
+          <div class="grid g2" style="margin-top:12px">${inp(sp(F.PRO.howLong, w), { label: '&ldquo;How long have you had it for?&rdquo;', ask: true, who: w, reg: 'Had it how long' })}</div>
+          ${Q('What are your thoughts on the plan you have?', '(Dissatisfied? Who helped them get it?)')}
+          ${inp(sp(F.PRO.thoughts[0], w), { area: true, rows: 2, who: w, reg: 'Thoughts on current plan' })}
           <h3>DIME: how much protection is needed</h3>
+          ${say('The industry recommends using the DIME method to determine how much protection is needed, so if we add up...', true)}
           <div class="dime">
             <div><div class="k"><b>D</b>ebts</div>${calc(sp(F.PRO.dDebts, w), { tag: '' })}</div>
             <div><div class="k"><b>I</b>ncome &middot; 10x</div>${calc(sp(F.PRO.dIncome, w), { tag: '' })}</div>
             <div><div class="k"><b>M</b>ortgage</div>${calc(sp(F.PRO.dMort, w), { tag: '' })}</div>
             <div><div class="k"><b>E</b>ducation</div>${inp(sp(F.PRO.dEdu, w), { type: 'money', who: w, reg: 'DIME education' })}</div>
           </div>
+          <div class="edupre" data-noring><span class="tip">Education per kid</span>${seg('_eduPer', F.EDU_PRESETS.map((v) => [String(v), '$' + v / 1000 + 'K']), { reg: 'Education per kid' })}<span class="tip">or type any amount in the box</span></div>
           <div class="total-line"><span class="l">Minimum to protect their loved ones</span><span class="v" data-c="${esc(sp(F.PRO.dTotal, w))}"></span></div>
           <div class="gap" data-gap="${w}"></div>
-          <div style="height:10px"></div>
+          <p class="say sm" data-min="${w}" style="margin-top:14px"></p>
           ${inp(sp(F.PRO.want, w), { label: 'How much would they want to have?', who: w })}
-          ${w === 'p' ? `<details class="script"><summary>Term vs perm script</summary><p>How familiar are you with the two main types of protection, term vs perm? Term is temporary, lasts for a max of 30 years, it is like renting an apartment. Because 99% of term plans never pay out any benefits, it is very cheap. Perm stands for a category of permanent options: whole life, universal life, IULs, VULs. Depending on the type of permanent plan, some offer additional benefits like tax free retirement income, long term care protection, college funding, and other living benefits. But because there are so many more benefits, it is not as dirt cheap as term. Permanent plans are like owning your house, where you will eventually get back much more than what you put in. We offer both. As a concept, which do you prefer?</p></details>` : ''}
-          <div class="grid g2" style="margin-top:12px;grid-template-columns:auto minmax(0,1fr);align-items:end">${seg(sp(F.PRO.prefer, w), [['Term', 'Term'], ['Perm', 'Perm'], ['Both', 'Both']], { label: 'Prefers', who: w, reg: 'Prefers term or perm' })}${inp(sp(F.PRO.why, w), { label: 'Why is that?', who: w, reg: 'Why term or perm' })}</div>
+          <details class="script" open><summary>Term vs perm script${w === 's' ? ' (recap for the spouse)' : ''}</summary><p>How familiar are you with the two main types of protection, term vs perm? Term is temporary, lasts for a max of 30 years, it is like renting an apartment. Because 99% of term plans never pay out any benefits, it is very cheap. Perm stands for a category of permanent options: whole life, universal life, IULs, VULs. Depending on the type of permanent plan, some offer additional benefits like tax free retirement income, long term care protection, college funding, and other living benefits. But because there are so many more benefits, it is not as dirt cheap as term. Permanent plans are like owning your house, where you will eventually get back much more than what you put in. We offer both. As a concept, which do you prefer?</p></details>
+          ${Q(w === 'p' ? 'We offer both. As a concept, which do you prefer? ... Why is that?' : 'Do you prefer term or perm? ... Why is that?')}
+          <div class="grid g2" style="grid-template-columns:auto minmax(0,1fr);align-items:end">${seg(sp(F.PRO.prefer, w), [['Term', 'Term'], ['Perm', 'Perm'], ['Both', 'Both']], { label: 'Prefers', who: w, reg: 'Prefers term or perm' })}${inp(sp(F.PRO.why, w), { label: 'Why is that?', who: w, reg: 'Why term or perm' })}</div>
           <h3>Health</h3>
-          <div class="fld"><label>Health, 1 to 10</label><div class="rate" data-seg="${esc(sp(F.PRO.health, w))}">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => `<button type="button" data-v="${n}">${n}</button>`).join('')}</div></div>
+          ${Q('If you had to rate yourself on a scale of 1 to 10, 10 being very healthy, what number would you give yourself (and why)?')}
+          <div class="fld"><div class="rate" data-seg="${esc(sp(F.PRO.health, w))}">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => `<button type="button" data-v="${n}">${n}</button>`).join('')}</div></div>
           ${(reg(sp(F.PRO.health, w), 'Health rating 1 to 10', w), '')}
           <div style="height:8px"></div>${inp(sp(F.PRO.healthWhy, w), { label: 'And why?', who: w, reg: 'Health rating why' })}
           <div style="height:10px"></div>
-          ${inp(sp(F.PRO.meds[0], w), { label: 'Medications or diagnoses (med list, year diagnosed)', area: true, rows: 2, who: w, reg: 'Medications and diagnoses' })}
-          <div style="margin-top:6px">${yn(sp(F.PRO.smoke[0], w), 'Do you smoke?', w)}${yn(sp(F.PRO.dui[0], w), 'Any DUIs in the past 5 years?', w)}</div>
+          ${Q('Do you take any prescription medication or have any diagnoses?', '(If yes, get med list and year diagnosed)')}
+          ${inp(sp(F.PRO.meds[0], w), { area: true, rows: 2, who: w, reg: 'Medications and diagnoses' })}
+          <div style="margin-top:6px">${yn(sp(F.PRO.smoke[0], w), '&ldquo;Do you smoke?&rdquo;', w)}${yn(sp(F.PRO.dui[0], w), '&ldquo;Any DUIs in the past 5 years?&rdquo;', w)}</div>
           <div class="hw" style="margin-top:8px">${inp(sp(F.PRO.ft, w), { label: 'Ft', type: 'num', who: w, reg: 'Height feet' })}${inp(sp(F.PRO.inch, w), { label: 'In', type: 'num', who: w, reg: 'Height inches' })}${inp(sp(F.PRO.wt, w), { label: 'Weight (lbs)', type: 'num', who: w, reg: 'Weight' })}</div>
-          <div style="margin-top:6px">${yn(sp(F.PRO.ltc[0], w), 'Long-term care protection?', w)}</div>
-          <div class="grid g2">${inp(sp(F.PRO.ltcCov, w), { label: 'LTC coverage', type: 'money', who: w })}${inp(sp(F.PRO.ltcPrem, w), { label: 'LTC per month', type: 'money', who: w, reg: 'LTC monthly cost' })}</div>
+          <div style="margin-top:6px">${yn(sp(F.PRO.ltc[0], w), '&ldquo;Do you have Long-Term Care protection?&rdquo;', w)}</div>
+          <div class="grid g2">${inp(sp(F.PRO.ltcCov, w), { label: 'Coverage amount', type: 'money', who: w, reg: 'LTC coverage' })}${inp(sp(F.PRO.ltcPrem, w), { label: 'Premium per month', type: 'money', who: w, reg: 'LTC monthly cost' })}</div>
           <p class="tip" style="margin:10px 0 0"><a href="https://drive.google.com/file/d/1HGRhQduKuMan6nqsaZAaVSwS1rFoeIX6/view?usp=drive_link" target="_blank" rel="noopener">NW underwriting guide</a></p>
         `))),
 
       S_('expenses', 'Expenses', () => section('expenses', '08', 'Expenses and savings', 'What is <em>left over</em>', `
-        <div class="grid g2" style="align-items:end">${yn(EXP_.budget[0], 'Do you keep a monthly budget?')}${inp(EXP_.expenses, { label: 'Total household expenses each month', type: 'money' })}</div>
-        <p class="tip" style="margin:8px 0 18px">I will email you a budget worksheet. <a href="https://www.dropbox.com/scl/fi/r2bwfwv4uogyyjiwjuk8h/Budget-Worksheet.xlsx?rlkey=xb7ufw8avuu5gfcx2ev2yk3ln&st=m666l90a&dl=0" target="_blank" rel="noopener">Budget worksheet</a></p>
+        <div style="max-width:640px">${yn(EXP_.budget[0], '&ldquo;Do you keep a monthly budget?&rdquo;')}</div>
+        ${Q('What are your approximate total household expenses each month?')}
+        <div class="grid g2">${inp(EXP_.expenses, { type: 'money', reg: 'Total household expenses each month' })}</div>
+        ${say('I&rsquo;ll email you a budget worksheet that if you can fill out before our next meeting, I can include in your financial analysis.', true)}
+        <p class="tip" style="margin:-4px 0 18px"><a href="https://www.dropbox.com/scl/fi/r2bwfwv4uogyyjiwjuk8h/Budget-Worksheet.xlsx?rlkey=xb7ufw8avuu5gfcx2ev2yk3ln&st=m666l90a&dl=0" target="_blank" rel="noopener">Budget worksheet</a></p>
         <div class="flow">
           <div class="lbl">Total net income</div><div></div>${calc(EXP_.combined, { tag: 'both' })}
           <div class="lbl">10% of net income</div><div></div>${calc(EXP_.ten)}
@@ -1683,7 +1790,8 @@ a{color:var(--tea);font-weight:600}
         </div>
         <p class="sentence" data-left></p>
         ${yn(EXP_.right[0], 'Does that sound about right?')}
-        <div class="grid g2" style="margin-top:6px">${inp(EXP_.growing, { label: 'Bank account growing or the same? By how much a month?', type: 'money' })}</div>
+        ${Q('Do you see your bank account growing or staying the same at the end of each month?', '(&ldquo;By how much?&rdquo;)')}
+        <div class="grid g2">${inp(EXP_.growing, { type: 'money', reg: 'Bank account growing or the same, by how much' })}</div>
         <h3>Savings goal</h3>
         ${say('Most families we help save at least 10% of their net income for their financial futures. Would you like to set a goal of saving the average of 10%, more, or less?', true)}
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${seg(EXP_.choice[0], [['10', '10%'], ['more', 'More'], ['less', 'Less']], { reg: 'Savings goal' })}
@@ -1729,7 +1837,7 @@ a{color:var(--tea);font-weight:600}
         <h3>Recommendations</h3>
         <div class="grid g3">${F.RECS.map((r, i) => inp(r[0], { label: `Recommendation ${i + 1}`, area: true, rows: 4 })).join('')}</div>`)),
     ];
-    $('#main').innerHTML = html.join('') + `<p class="footer-note">Saved only on this device. Nothing leaves this computer unless you download the PDF.</p>`;
+    $('#main').innerHTML = '<div class="recent card" id="recent" hidden></div>' + html.join('') + `<p class="footer-note">Saved only on this device. Nothing leaves this computer unless you download the PDF.</p>`;
     $('#nav').innerHTML = SECTIONS.map((s, i) => `<a href="#${s.id}" data-nav="${s.id}"><span class="ring" data-ring="${s.id}"></span><span>${s.name}</span></a>`).join('');
   }
   const EXP_ = F.EXP;
@@ -1816,14 +1924,17 @@ a{color:var(--tea);font-weight:600}
     });
     $$('[data-m]').forEach((el) => setMoney(el, c[el.dataset.m]));
     // auto placeholders: ages from DOB, education 100K per kid
-    for (const p of F.PEOPLE) {
+    if (!S._eduPer) S._eduPer = String(DB.eduPer || 100000);
+    for (const p of [...F.PEOPLE, ...F.EXTRA_DEPS]) {
       const el = $(`[data-k="${CSS.escape(p.age)}"]`); if (!el) continue;
       const a = F.ageFrom(S[p.dob[0]]);
       el.placeholder = a ? a : ''; el.classList.toggle('has-auto', !!a);
     }
     for (const w of ['p', 's']) {
       const el = $(`[data-k="${CSS.escape(sp(F.PRO.dEdu, w))}"]`);
-      if (el) { el.placeholder = c.kids ? `${F.fmt(c.eduAuto)} (${c.kids} kid${c.kids > 1 ? 's' : ''})` : '100K per kid'; el.classList.toggle('has-auto', !!c.kids); }
+      if (el) { el.placeholder = c.kids ? `${F.fmt(c.eduAuto)} (${c.kids} kid${c.kids > 1 ? 's' : ''})` : `${c.eduPer / 1000}K per kid`; el.classList.toggle('has-auto', !!c.kids); }
+      const mn = $(`[data-min="${w}"]`);
+      if (mn) mn.innerHTML = `<b class="amt">${c[sp(F.PRO.dTotal, w)] ? '$' + F.fmt(c[sp(F.PRO.dTotal, w)]) : '$ ___'}</b> would be the min amount necessary to protect your loved ones. What are your thoughts on how much you would want to have?`;
       const gap = $(`[data-gap="${w}"]`);
       if (gap) {
         const need = c[sp(F.PRO.dTotal, w)], have = c['cov_' + w];
@@ -1841,6 +1952,8 @@ a{color:var(--tea);font-weight:600}
     $('[data-saving]').innerHTML = ch ? `So at <b>${c.savePct || '__'}%</b>, we are looking at saving <b>$${F.fmt(c[EXP_.saving])}</b> a month to help you reach your financial goals and dreams. How does that sound?` : '';
     intros();
     deps();
+    debts();
+    recent();
     drawMulti();
     tzCard();
     $$('#main textarea').forEach(grow);
@@ -1866,7 +1979,9 @@ a{color:var(--tea);font-weight:600}
   }
 
   /* ---------- dependents: one line, more on tap ---------- */
-  const DEPS = F.PEOPLE.slice(2);
+  const DEPS = F.DEPS;
+  // the two switches on each child line
+  const flags = (d) => { const f = F.depFlag(d); return `<button type="button" class="chip sm" data-bool="${esc(f.notDep)}" title="Separated, grown, or lives somewhere else, but still in the plan"><span class="ck"></span>Not a dependent</button><button type="button" class="chip sm" data-bool="${esc(f.noCol)}" title="Leave this child out of the Education number"><span class="ck"></span>No college money</button>`; };
   const depFilled = (p) => [p.name, p.sex, p.dob[0], p.age].some((k) => String(S[k] || '').trim());
   const depShown = () => { let last = -1; DEPS.forEach((p, i) => { if (depFilled(p)) last = i; }); return Math.min(DEPS.length, Math.max(1, last + 1, S._depShow || 0)); };
   function deps() {
@@ -1878,6 +1993,31 @@ a{color:var(--tea);font-weight:600}
     const n = depShown(); if (n >= DEPS.length) return;
     S._depShow = n + 1; save(); deps();
     const el = $(`[data-k="${CSS.escape(DEPS[n].name)}"]`); if (el) el.focus();
+  }
+  const XD = F.EXTRA_DEBTS;
+  const xdFilled = (r) => [r.type, r.bal, r.rate, r.pay].some((k) => String(S[k] || '').trim());
+  const xdShown = () => { let last = -1; XD.forEach((r, i) => { if (xdFilled(r)) last = i; }); return Math.min(XD.length, Math.max(0, last + 1, S._debtShow || 0)); };
+  function debts() {
+    const n = xdShown();
+    $$('[data-xdebt]').forEach((el) => { el.hidden = +el.dataset.xdebt >= n; });
+    const b = $('#debtAdd'); if (b) b.hidden = n >= XD.length;
+  }
+  function addDebt() {
+    const n = xdShown(); if (n >= XD.length) return;
+    S._debtShow = n + 1; save(); debts();
+    const el = $(`[data-k="${CSS.escape(XD[n].type)}"]`); if (el) el.focus();
+  }
+  // a blank new intake shows the saved clients on top, so going back is one tap
+  function recent() {
+    const box = $('#recent'); if (!box) return;
+    const list = Object.entries(DB.clients).filter(([id]) => id !== CUR).sort((a, b) => b[1].updated - a[1].updated);
+    const fresh = !DB.clients[CUR];
+    box.hidden = !fresh || !list.length;
+    if (box.hidden) return;
+    box.innerHTML = `<div class="rhead"><b>Pick up a saved client</b><span class="tip">or start typing below for a new one</span></div><div class="rlist">${list.slice(0, 6).map(([id, c]) => {
+      const st = c.state, nm = st.PROSPECT ? st.PROSPECT + (st['Spouse Name'] && st._hasSpouse !== false ? ' & ' + st['Spouse Name'].split(' ')[0] : '') : 'Unnamed client';
+      return `<button type="button" class="rcl" data-open="${id}"><span class="nm">${esc(nm)}</span><span class="dt">${new Date(c.updated).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></button>`;
+    }).join('')}${list.length > 6 ? `<button type="button" class="rcl more" id="recentAll"><span class="nm">All ${list.length} clients</span></button>` : ''}</div>`;
   }
   // text boxes grow with the answer
   function grow(el) {
@@ -1945,7 +2085,7 @@ a{color:var(--tea);font-weight:600}
     let tot = 0, got = 0;
     for (const s of SECTIONS) {
       const sec = document.getElementById(s.id); if (!sec) continue;
-      let keys = $$('[data-k],[data-seg],[data-bool],[data-multi]', sec).filter((el) => (hasSpouse() || !el.closest('.col-s')) && !el.closest('[data-noring]') && !el.closest('[data-dep][hidden]')).map((el) => el.dataset.k || el.dataset.seg || el.dataset.bool || el.dataset.multi);
+      let keys = $$('[data-k],[data-seg],[data-bool],[data-multi]', sec).filter((el) => (hasSpouse() || !el.closest('.col-s')) && !el.closest('[data-noring]') && !el.closest('[data-dep][hidden]') && !el.closest('[data-xdebt][hidden]')).map((el) => el.dataset.k || el.dataset.seg || el.dataset.bool || el.dataset.multi);
       keys = [...new Set(keys)];
       const filled = keys.filter((k) => S[k] !== undefined && S[k] !== '' && S[k] !== false).length;
       tot += keys.length; got += filled;
@@ -2001,6 +2141,8 @@ a{color:var(--tea);font-weight:600}
     const ia = e.target.closest('[data-intro-add]');
     if (ia) { addIntro(ia.dataset.introAdd); return; }
     if (e.target.closest('#depAdd')) { addDep(); return; }
+    if (e.target.closest('#debtAdd')) { addDebt(); return; }
+    if (e.target.closest('#recentAll')) { openClients(); return; }
     const ma = e.target.closest('[data-multi-add]');
     if (ma) {
       const k = ma.dataset.multiAdd, rows = getRows(k); rows.push(''); setRows(k, rows);
@@ -2107,6 +2249,7 @@ a{color:var(--tea);font-weight:600}
     const el = $(`[data-k="${CSS.escape(k)}"]`) || $(`[data-seg="${CSS.escape(k)}"]`) || $(`[data-bool="${CSS.escape(k)}"]`) || $(`[data-mk="${CSS.escape(k)}"]`);
     if (!el) return;
     const dep = el.closest('[data-dep]'); if (dep && dep.hidden) { S._depShow = +dep.dataset.dep + 1; deps(); }
+    const xd = el.closest('[data-xdebt]'); if (xd && xd.hidden) { S._debtShow = +xd.dataset.xdebt + 1; debts(); }
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => { if (el.focus) el.focus({ preventScroll: true }); flash(k); }, 380);
   }
@@ -2136,8 +2279,9 @@ a{color:var(--tea);font-weight:600}
     $('#veil').classList.add('on'); $('#drawer').classList.add('on');
   }
   function closeVeil() { $('#veil').classList.remove('on'); $('#drawer').classList.remove('on'); $('#pal').classList.remove('on'); $('#rail').classList.remove('on'); }
-  function loadClient(id) { CUR = id; S = DB.clients[id].state; DB.current = id; persist(); paint(); closeVeil(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-  function newClient() { CUR = newId(); S = blank(); DB.current = null; persist(); paint(); closeVeil(); window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => $(`[data-k="PROSPECT"]`).focus(), 300); }
+  const unfocus = () => { const a = document.activeElement; if (a && a !== document.body && a.blur) a.blur(); };
+  function loadClient(id) { unfocus(); CUR = id; S = DB.clients[id].state; DB.current = id; persist(); paint(); closeVeil(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  function newClient() { unfocus(); CUR = newId(); S = blank(); DB.current = null; persist(); paint(); closeVeil(); window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => $(`[data-k="PROSPECT"]`).focus(), 300); }
   document.addEventListener('click', (e) => {
     const o = e.target.closest('[data-open]'), d = e.target.closest('[data-del]');
     if (d) { e.stopPropagation(); const st = DB.clients[d.dataset.del].state; if (confirm(`Delete ${st.PROSPECT || 'this client'} from this device? This cannot be undone.`)) { delete DB.clients[d.dataset.del]; if (d.dataset.del === CUR) { CUR = newId(); S = blank(); paint(); } persist(); openClients(); } return; }
@@ -2169,9 +2313,11 @@ a{color:var(--tea);font-weight:600}
     try {
       const vals = await FNAPdf.readPdf(PDFLib, new Uint8Array(await file.arrayBuffer()));
       const st = F.fromPdfValues(vals);
-      CUR = newId(); S = Object.assign(blank(), st, { _hasSpouse: !!(st['Spouse Name'] || Object.keys(st).some((k) => F.PAGE4.has(k))) });
+      const tw = twinOf(st, null);
+      CUR = tw || newId(); S = Object.assign(blank(), st, { _hasSpouse: !!(st['Spouse Name'] || Object.keys(st).some((k) => F.PAGE4.has(k))) });
+      if (tw) dupWarned = 'skip';
       save(); paint();
-      toast([`Loaded ${Object.keys(st).length} answers from ${file.name}`], {}, []);
+      toast([tw ? `Updated ${st.PROSPECT} with ${file.name} (no second copy)` : `Loaded ${Object.keys(st).length} answers from ${file.name}`], {}, []);
     } catch (err) { alert('That PDF could not be read: ' + err.message); }
   }
 
@@ -2205,6 +2351,7 @@ a{color:var(--tea);font-weight:600}
   $('#dlBtn').addEventListener('click', () => pdfAction('dl'));
   $('#pvBtn').addEventListener('click', () => pdfAction('pv'));
   // hand this client to the FNA Report app (same site, same device storage)
+  // Build report is hidden until compliance says how it fits with MyWFG (Edgar, 11/24). The code stays.
   $('#rptBtn').addEventListener('click', () => {
     if (!(S.PROSPECT || '').trim()) { alert('Add the prospect name first.'); return; }
     clearTimeout(saveT); DB.clients[CUR] = { state: S, updated: Date.now() }; DB.current = CUR; persist();
