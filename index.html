@@ -508,6 +508,9 @@ a{color:var(--tea);font-weight:600}
 .famscript[hidden]{display:none}
 .yesmore{margin:4px 0 10px}
 .yesmore[hidden]{display:none}
+/* "came to mind" names, right under that question */
+.intros.near{margin:2px 0 14px}
+.intros[hidden]{display:none}
 .famscript .famhd{padding:11px 16px 6px;font-size:12.5px;font-weight:700;color:var(--tea)}
 </style>
 </head>
@@ -1917,6 +1920,7 @@ a{color:var(--tea);font-weight:600}
         <p class="tip" style="margin:0 0 6px">Read this out loud, then ask.</p>
         ${say('Before we wrap up, one thing about how we work. You will never get a bill from us for any of this. The institutions we partner with compensate us, so your analysis is free. What keeps our doors open is personal introductions. Most families we help introduce us to 10 to 15 people they love. We intend to earn that.', true)}
         <div class="askrow">${say('As we went through this today, who came to mind who should have this same conversation?')}<button type="button" class="btn sm" data-intro-add="Came to mind">+ Name</button></div>
+        <div class="intros near" data-intro-near data-noring hidden><div class="hd"></div><div class="hd">Name</div><div class="hd">How they know them</div><div class="hd">Why they came to mind</div><div class="hd">Event</div></div>
         <p class="tip" style="margin:-4px 0 14px">No phone numbers yet. No push. You come back to these names at Step 5.</p>
         ${say('I have a few ideas I would like to run by you. When people have money moving in their life, that is usually when they want someone in their corner. Is it okay if I run a few by you?', true)}
         <p class="tip" data-theirs-tip style="margin:0 0 8px"></p>
@@ -2176,11 +2180,24 @@ a{color:var(--tea);font-weight:600}
   const filledRow = (r) => !!(String(S[r.name] || '').trim() || String(S[r.how] || '').trim() || String(S[r.why] || '').trim());
   const introShown = () => {
     let last = -1; F.INTRO_ROWS.forEach((r, i) => { if (filledRow(r) || S[r.event]) last = i; });
-    return Math.min(10, Math.max(3, last + 1, S._introShow || 0));
+    // "came to mind" names sit under their question, so the table below still keeps 3 open lines
+    const nearN = F.INTRO_ROWS.filter((r) => S[r.event] === 'Came to mind').length;
+    return Math.min(10, Math.max(3 + nearN, last + 1, S._introShow || 0));
   };
   function intros() {
     const n = introShown();
     $$('[data-irow]').forEach((el) => { el.hidden = +el.dataset.irow >= n; });
+    // "came to mind" lines move up, right under that question; the rest stay in the table
+    const near = $('[data-intro-near]'), table = $('.intros:not([data-intro-near])');
+    if (near && table) {
+      const rows = $$('[data-irow]').sort((a, b) => a.dataset.irow - b.dataset.irow);
+      const up = rows.filter((el) => !el.hidden && S[F.INTRO_ROWS[+el.dataset.irow].event] === 'Came to mind');
+      const down = rows.filter((el) => !up.includes(el));
+      // only move lines when the order changed, so typing never loses its place
+      const sync = (box, list) => { const cur = $$(':scope > [data-irow]', box); if (cur.length !== list.length || cur.some((el, i) => el !== list[i])) list.forEach((el) => box.appendChild(el)); };
+      sync(near, up); sync(table, down);
+      near.hidden = !up.length;
+    }
     // their own money-moving event goes first (Cates: "the first one is actually yours")
     const theirs = F.theirEvents(S);
     F.EVENTS.forEach((e, i) => { const el = $(`[data-ev="${e.id}"]`); if (!el) return; const on = theirs.has(e.id); el.classList.toggle('mine', on); el.style.order = on ? i - 10 : i; });
@@ -2198,7 +2215,8 @@ a{color:var(--tea);font-weight:600}
     if (tag) S[F.INTRO_ROWS[i].event] = tag;
     save(); paint([F.INTRO_ROWS[i].event]);
     const el = $(`[data-k="${CSS.escape(F.INTRO_ROWS[i].name)}"]`);
-    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => el.focus({ preventScroll: true }), 300); }
+    // cursor lands right away (no wait), then the page glides to the line
+    if (el) { el.focus({ preventScroll: true }); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
   }
 
   function rail(c, nm) {
