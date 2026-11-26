@@ -491,6 +491,11 @@ a{color:var(--tea);font-weight:600}
 .uw{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
 .uw a{font-weight:700}
 .estateflag{margin:6px 0 0;color:var(--tea);font-weight:600}
+
+/* a question with its answer box next to it */
+.qa{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:14px;align-items:center;margin:4px 0 12px}
+.qa .say.q{margin:0}
+@media (max-width:560px){.qa{grid-template-columns:1fr;gap:8px}}
 </style>
 </head>
 <body>
@@ -1744,9 +1749,9 @@ a{color:var(--tea);font-weight:600}
         </div>`)),
 
       S_('retirement', 'Retirement', () => section('retirement', '04', 'Retirement', 'Retirement <em>goals</em>', `
-        ${say('At what age would you like to be in a financial position to not have to work a job anymore? How much would you want coming in per month in retirement?', true)}
         ${duo((w) => `
-          <div class="grid g2">${inp(sp(F.RET.age, w), { label: 'Done working at age', type: 'num', who: w, ph: '60' })}${inp(sp(F.RET.monthly, w), { label: 'Wants per month in retirement', type: 'money', who: w })}</div>
+          <div class="qa"><p class="say sm q">At what age would you like to be in a financial position to not have to work a job anymore?</p>${inp(sp(F.RET.age, w), { reg: 'Done working at age', type: 'num', who: w, ph: '60' })}</div>
+          <div class="qa"><p class="say sm q">How much would you want coming in per month in retirement?</p>${inp(sp(F.RET.monthly, w), { reg: 'Wants per month in retirement', type: 'money', who: w })}</div>
           ${Q('Let&rsquo;s look at what you have saved so far... Do you have any current employer retirement accounts?')}
           ${inp(sp(F.RET.employer, w), { label: 'Employer', who: w })}
           <div style="height:10px"></div>
