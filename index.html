@@ -942,7 +942,10 @@ a{color:var(--tea);font-weight:600}
     for (const w of (hasSpouse ? ['p', 's'] : ['p'])) {
       const who = T(PEOPLE[w === 'p' ? 0 : 1].name).split(' ')[0] || (w === 'p' ? 'Prospect' : 'Spouse');
       if (st[sp(PRO.smoke[0], w)] === 'Y' && T('_smokeNote' + w)) spill.push(`${who} smoking: ${T('_smokeNote' + w)}`);
+      if (st[sp(PRO.dui[0], w)] === 'Y' && T('_duiNote' + w)) spill.push(`${who} DUI: ${T('_duiNote' + w)}`);
     }
+    if (st[EXP.right[0]] === 'N' && num(st._leftThink)) spill.push(`They think about $${fmt(num(st._leftThink))} is left over each month`);
+    if (st._growing === 'same') spill.push('Bank account is staying the same each month');
     if (st._estateImp === 'Y') spill.push('Will or trust is important to them: introduce an estate attorney');
     if (c.kids && eduPer(st) !== 100000) spill.push(`Education figured at $${fmt(eduPer(st))} per kid`);
     // long text groups
@@ -1874,7 +1877,7 @@ a{color:var(--tea);font-weight:600}
           <div style="height:10px"></div>
           ${Q('Do you take any prescription medication or have any diagnoses?', '(If yes, get med list and year diagnosed)')}
           ${inp(sp(F.PRO.meds[0], w), { area: true, rows: 2, who: w, reg: 'Medications and diagnoses' })}
-          <div style="margin-top:6px">${yn(sp(F.PRO.smoke[0], w), '&ldquo;Do you smoke?&rdquo;', w)}<div class="yesmore" data-yesmore="${esc(sp(F.PRO.smoke[0], w))}" hidden>${inp('_smokeNote' + w, { label: 'Details', who: w, reg: 'Smoking details', ph: 'What they smoke, how often, when they started or quit' })}</div>${yn(sp(F.PRO.dui[0], w), '&ldquo;Any DUIs in the past 5 years?&rdquo;', w)}</div>
+          <div style="margin-top:6px">${yn(sp(F.PRO.smoke[0], w), '&ldquo;Do you smoke?&rdquo;', w)}<div class="yesmore" data-yesmore="${esc(sp(F.PRO.smoke[0], w))}" hidden>${inp('_smokeNote' + w, { label: 'Details', who: w, reg: 'Smoking details', ph: 'What they smoke, how often, when they started or quit' })}</div>${yn(sp(F.PRO.dui[0], w), '&ldquo;Any DUIs in the past 5 years?&rdquo;', w)}<div class="yesmore" data-yesmore="${esc(sp(F.PRO.dui[0], w))}" hidden>${inp('_duiNote' + w, { label: 'Details', who: w, reg: 'DUI details', ph: 'How many, what year, anything still open' })}</div></div>
           <div class="hw" style="margin-top:8px">${inp(sp(F.PRO.ft, w), { label: 'Ft', type: 'num', who: w, reg: 'Height feet' })}${inp(sp(F.PRO.inch, w), { label: 'In', type: 'num', who: w, reg: 'Height inches' })}${inp(sp(F.PRO.wt, w), { label: 'Weight (lbs)', type: 'num', who: w, reg: 'Weight' })}</div>
           <div style="margin-top:6px">${yn(sp(F.PRO.ltc[0], w), '&ldquo;Do you have Long-Term Care protection?&rdquo;', w)}</div>
           <div class="grid g2">${inp(sp(F.PRO.ltcCov, w), { label: 'Coverage amount', type: 'money', who: w, reg: 'LTC coverage' })}${inp(sp(F.PRO.ltcPrem, w), { label: 'Premium per month', type: 'money', who: w, reg: 'LTC monthly cost' })}</div>
@@ -1895,8 +1898,10 @@ a{color:var(--tea);font-weight:600}
         </div>
         <p class="sentence" data-left></p>
         ${yn(EXP_.right[0], 'Does that sound about right?')}
-        ${Q('Do you see your bank account growing or staying the same at the end of each month?', '(&ldquo;By how much?&rdquo;)')}
-        <div class="grid g2">${inp(EXP_.growing, { type: 'money', reg: 'Bank account growing or the same, by how much' })}</div>
+        <div class="yesmore" data-nomore="${esc(EXP_.right[0])}" hidden><div class="grid g2">${inp('_leftThink', { label: 'How much do they think is left over?', type: 'money', reg: 'Left over they think' })}</div></div>
+        ${Q('Do you see your bank account growing or staying the same at the end of each month?')}
+        <div class="famrow">${seg('_growing', [['grow', 'Growing'], ['same', 'Staying the same']], { reg: 'Bank account growing or staying the same' })}</div>
+        <div class="yesmore" data-growmore hidden><div class="grid g2">${inp(EXP_.growing, { label: '&ldquo;By how much?&rdquo;', ask: true, type: 'money', reg: 'Bank account growing, by how much' })}</div></div>
         <h3>Savings goal</h3>
         ${say('Most families we help save at least 10% of their net income for their financial futures. Would you like to set a goal of saving the average of 10%, more, or less?', true)}
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${seg(EXP_.choice[0], [['10', '10%'], ['more', 'More'], ['less', 'Less']], { reg: 'Savings goal' })}
@@ -2072,6 +2077,10 @@ a{color:var(--tea);font-weight:600}
     { const ef = $('[data-estate]'); if (ef) ef.hidden = S._estateImp !== 'Y'; }
     // a details box under a question that only opens on Yes
     $$('[data-yesmore]').forEach((el) => { el.hidden = S[el.dataset.yesmore] !== 'Y'; });
+    // and one that only opens on No
+    $$('[data-nomore]').forEach((el) => { el.hidden = S[el.dataset.nomore] !== 'N'; });
+    // growing opens "by how much" (an amount typed before this existed still shows)
+    { const gm = $('[data-growmore]'); if (gm) gm.hidden = !(S._growing === 'grow' || (!S._growing && String(S[EXP_.growing] || '').trim())); }
     // sentences
     const left = c[EXP_.disc];
     $('[data-left]').innerHTML = S[EXP_.expenses] || c[EXP_.combined] ? `Based on what is coming in and what is going out, it looks like you should have about <b>$${F.fmt(left)}</b> left over at the end of the month. Does that sound about right?` : '';
