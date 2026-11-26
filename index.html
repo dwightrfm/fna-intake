@@ -510,6 +510,7 @@ a{color:var(--tea);font-weight:600}
 .yesmore[hidden]{display:none}
 /* "came to mind" names, right under that question */
 .intros.near{margin:2px 0 14px}
+.ev .intros.near{grid-column:1/-1;margin:4px 0 2px}
 .intros[hidden]{display:none}
 .famscript .famhd{padding:11px 16px 6px;font-size:12.5px;font-weight:700;color:var(--tea)}
 </style>
@@ -1689,6 +1690,8 @@ a{color:var(--tea);font-weight:600}
     const box = `<div class="in ${wrap} ${o.cal ? 'hascal' : ''}">${el}${cal}</div>`;
     return o.label ? `<div class="fld ${o.cls || ''}"><label class="${o.ask ? 'ask' : ''}">${o.label}</label>${box}</div>` : box;
   }
+  // where the names for one introduction question show up, right under that question
+  const nearBox = (tag) => `<div class="intros near" data-intro-near="${esc(tag)}" data-noring hidden><div class="hd"></div><div class="hd">Name</div><div class="hd">How they know them</div><div class="hd">Why they came to mind</div><div class="hd">Event</div></div>`;
   // the x on every line an add button made
   const rmBtn = (kind, w, i, title) => `<button type="button" class="rmrow" data-rm="${kind}" data-rmw="${w}" data-i="${i}" title="${title}" aria-label="${title}">&times;</button>`;
   // a question read word for word from the paper form, then a small note in parentheses
@@ -1920,11 +1923,11 @@ a{color:var(--tea);font-weight:600}
         <p class="tip" style="margin:0 0 6px">Read this out loud, then ask.</p>
         ${say('Before we wrap up, one thing about how we work. You will never get a bill from us for any of this. The institutions we partner with compensate us, so your analysis is free. What keeps our doors open is personal introductions. Most families we help introduce us to 10 to 15 people they love. We intend to earn that.', true)}
         <div class="askrow">${say('As we went through this today, who came to mind who should have this same conversation?')}<button type="button" class="btn sm" data-intro-add="Came to mind">+ Name</button></div>
-        <div class="intros near" data-intro-near data-noring hidden><div class="hd"></div><div class="hd">Name</div><div class="hd">How they know them</div><div class="hd">Why they came to mind</div><div class="hd">Event</div></div>
+        ${nearBox('Came to mind')}
         <p class="tip" style="margin:-4px 0 14px">No phone numbers yet. No push. You come back to these names at Step 5.</p>
         ${say('I have a few ideas I would like to run by you. When people have money moving in their life, that is usually when they want someone in their corner. Is it okay if I run a few by you?', true)}
         <p class="tip" data-theirs-tip style="margin:0 0 8px"></p>
-        <div class="events">${F.EVENTS.map((e) => `<div class="ev" data-ev="${e.id}"><div class="evtag">${e.tag}<span class="theirs">Their category</span></div><p class="say sm">${e.q}</p><button type="button" class="btn sm" data-intro-add="${esc(e.tag)}">+ Name</button></div>`).join('')}</div>
+        <div class="events">${F.EVENTS.map((e) => `<div class="ev" data-ev="${e.id}"><div class="evtag">${e.tag}<span class="theirs">Their category</span></div><p class="say sm">${e.q}</p><button type="button" class="btn sm" data-intro-add="${esc(e.tag)}">+ Name</button>${nearBox(e.tag)}</div>`).join('')}</div>
         <div class="intros" data-noring>
           <div class="hd"></div><div class="hd">Name</div><div class="hd">How they know them</div><div class="hd">Why they came to mind</div><div class="hd">Event</div>
           ${F.INTRO_ROWS.map((r, i) => `<div class="irow" data-irow="${i}"><div class="n">${i + 1}</div>${inp(r.name, { reg: `Introduction ${i + 1} name`, ph: 'Name' })}${inp(r.how, { ph: 'Sister, coworker...' })}${inp(r.why, { ph: 'Why them' })}<div class="rmwrap"><div class="in"><select data-k="${esc(r.event)}" aria-label="Introduction ${i + 1} event"><option value=""></option>${['Came to mind', ...F.EVENTS.map((e) => e.tag)].map((t) => `<option>${t}</option>`).join('')}</select></div>${rmBtn('intro', '', i, 'Remove this name')}</div></div>`).join('')}
@@ -2181,22 +2184,26 @@ a{color:var(--tea);font-weight:600}
   const introShown = () => {
     let last = -1; F.INTRO_ROWS.forEach((r, i) => { if (filledRow(r) || S[r.event]) last = i; });
     // "came to mind" names sit under their question, so the table below still keeps 3 open lines
-    const nearN = F.INTRO_ROWS.filter((r) => S[r.event] === 'Came to mind').length;
+    const nearN = F.INTRO_ROWS.filter((r) => S[r.event]).length;
     return Math.min(10, Math.max(3 + nearN, last + 1, S._introShow || 0));
   };
   function intros() {
     const n = introShown();
     $$('[data-irow]').forEach((el) => { el.hidden = +el.dataset.irow >= n; });
-    // "came to mind" lines move up, right under that question; the rest stay in the table
-    const near = $('[data-intro-near]'), table = $('.intros:not([data-intro-near])');
-    if (near && table) {
+    // each name moves up under the question it came from; names with no question stay in the table
+    const nears = $$('[data-intro-near]'), table = $('.intros:not([data-intro-near])');
+    if (nears.length && table) {
       const rows = $$('[data-irow]').sort((a, b) => a.dataset.irow - b.dataset.irow);
-      const up = rows.filter((el) => !el.hidden && S[F.INTRO_ROWS[+el.dataset.irow].event] === 'Came to mind');
-      const down = rows.filter((el) => !up.includes(el));
+      const groups = new Map(nears.map((bx) => [bx, []])), down = [];
+      rows.forEach((el) => {
+        const tag = S[F.INTRO_ROWS[+el.dataset.irow].event];
+        const bx = !el.hidden && tag && nears.find((x) => x.dataset.introNear === tag);
+        if (bx) groups.get(bx).push(el); else down.push(el);
+      });
       // only move lines when the order changed, so typing never loses its place
       const sync = (box, list) => { const cur = $$(':scope > [data-irow]', box); if (cur.length !== list.length || cur.some((el, i) => el !== list[i])) list.forEach((el) => box.appendChild(el)); };
-      sync(near, up); sync(table, down);
-      near.hidden = !up.length;
+      groups.forEach((list, bx) => { sync(bx, list); bx.hidden = !list.length; });
+      sync(table, down);
     }
     // their own money-moving event goes first (Cates: "the first one is actually yours")
     const theirs = F.theirEvents(S);
