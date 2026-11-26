@@ -506,6 +506,8 @@ a{color:var(--tea);font-weight:600}
 /* term vs perm: familiar or not, script opens on "not familiar" */
 .famrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
 .famscript[hidden]{display:none}
+.yesmore{margin:4px 0 10px}
+.yesmore[hidden]{display:none}
 .famscript .famhd{padding:11px 16px 6px;font-size:12.5px;font-weight:700;color:var(--tea)}
 </style>
 </head>
@@ -936,6 +938,10 @@ a{color:var(--tea);font-weight:600}
         const bits = [T(x.type), T(x.company), amt && '$' + fmt(amt), cost && '$' + fmt(cost) + ' a month', T(x.had) && 'had it ' + T(x.had)].filter(Boolean).join(', ');
         spill.push(`${who} plan ${x.n}: ${bits}`);
       });
+    }
+    for (const w of (hasSpouse ? ['p', 's'] : ['p'])) {
+      const who = T(PEOPLE[w === 'p' ? 0 : 1].name).split(' ')[0] || (w === 'p' ? 'Prospect' : 'Spouse');
+      if (st[sp(PRO.smoke[0], w)] === 'Y' && T('_smokeNote' + w)) spill.push(`${who} smoking: ${T('_smokeNote' + w)}`);
     }
     if (st._estateImp === 'Y') spill.push('Will or trust is important to them: introduce an estate attorney');
     if (c.kids && eduPer(st) !== 100000) spill.push(`Education figured at $${fmt(eduPer(st))} per kid`);
@@ -1868,7 +1874,7 @@ a{color:var(--tea);font-weight:600}
           <div style="height:10px"></div>
           ${Q('Do you take any prescription medication or have any diagnoses?', '(If yes, get med list and year diagnosed)')}
           ${inp(sp(F.PRO.meds[0], w), { area: true, rows: 2, who: w, reg: 'Medications and diagnoses' })}
-          <div style="margin-top:6px">${yn(sp(F.PRO.smoke[0], w), '&ldquo;Do you smoke?&rdquo;', w)}${yn(sp(F.PRO.dui[0], w), '&ldquo;Any DUIs in the past 5 years?&rdquo;', w)}</div>
+          <div style="margin-top:6px">${yn(sp(F.PRO.smoke[0], w), '&ldquo;Do you smoke?&rdquo;', w)}<div class="yesmore" data-yesmore="${esc(sp(F.PRO.smoke[0], w))}" hidden>${inp('_smokeNote' + w, { label: 'Details', who: w, reg: 'Smoking details', ph: 'What they smoke, how often, when they started or quit' })}</div>${yn(sp(F.PRO.dui[0], w), '&ldquo;Any DUIs in the past 5 years?&rdquo;', w)}</div>
           <div class="hw" style="margin-top:8px">${inp(sp(F.PRO.ft, w), { label: 'Ft', type: 'num', who: w, reg: 'Height feet' })}${inp(sp(F.PRO.inch, w), { label: 'In', type: 'num', who: w, reg: 'Height inches' })}${inp(sp(F.PRO.wt, w), { label: 'Weight (lbs)', type: 'num', who: w, reg: 'Weight' })}</div>
           <div style="margin-top:6px">${yn(sp(F.PRO.ltc[0], w), '&ldquo;Do you have Long-Term Care protection?&rdquo;', w)}</div>
           <div class="grid g2">${inp(sp(F.PRO.ltcCov, w), { label: 'Coverage amount', type: 'money', who: w, reg: 'LTC coverage' })}${inp(sp(F.PRO.ltcPrem, w), { label: 'Premium per month', type: 'money', who: w, reg: 'LTC monthly cost' })}</div>
@@ -2064,6 +2070,8 @@ a{color:var(--tea);font-weight:600}
       $$(`.col-${w} [data-pay]`).forEach((r) => { r.classList.toggle('hot', r.dataset.pay === f); r.classList.toggle('dim', !!f && r.dataset.pay !== f && !F.num(S[sp({ b: F.INC.biw, s: F.INC.semi, w: F.INC.week, m: F.INC.month }[r.dataset.pay], w)])); });
     }
     { const ef = $('[data-estate]'); if (ef) ef.hidden = S._estateImp !== 'Y'; }
+    // a details box under a question that only opens on Yes
+    $$('[data-yesmore]').forEach((el) => { el.hidden = S[el.dataset.yesmore] !== 'Y'; });
     // sentences
     const left = c[EXP_.disc];
     $('[data-left]').innerHTML = S[EXP_.expenses] || c[EXP_.combined] ? `Based on what is coming in and what is going out, it looks like you should have about <b>$${F.fmt(left)}</b> left over at the end of the month. Does that sound about right?` : '';
