@@ -674,6 +674,7 @@ a{color:var(--tea);font-weight:600}
   const UW_GUIDES = {
     Nationwide: 'https://drive.google.com/file/d/1HGRhQduKuMan6nqsaZAaVSwS1rFoeIX6/view?usp=drive_link',
     Transamerica: '',
+    'Pacific Life': '',
   };
 
   const GOALS = [
@@ -2056,7 +2057,8 @@ a{color:var(--tea);font-weight:600}
       const car = S['_uw' + w] || 'Nationwide', url = F.UW_GUIDES[car];
       $$(`[data-seg="_uw${w}"] button`).forEach((b) => b.classList.toggle('on', b.dataset.v === car));
       const ug = $(`[data-uw="${w}"]`);
-      if (ug) ug.innerHTML = url ? `<a href="${esc(url)}" target="_blank" rel="noopener">Open the ${esc(car)} guide</a>` : `${esc(car)} guide link not added yet`;
+      // no link line: the carrier button opens its guide; a carrier with no guide yet says so
+      if (ug) ug.textContent = url ? '' : `${car} guide not added yet`;
       // highlight the pay row they use
       const f = S[sp(F.INC.freq[0], w)];
       $$(`.col-${w} [data-pay]`).forEach((r) => { r.classList.toggle('hot', r.dataset.pay === f); r.classList.toggle('dim', !!f && r.dataset.pay !== f && !F.num(S[sp({ b: F.INC.biw, s: F.INC.semi, w: F.INC.week, m: F.INC.month }[r.dataset.pay], w)])); });
@@ -2265,6 +2267,9 @@ a{color:var(--tea);font-weight:600}
   });
   document.addEventListener('focusin', (e) => { const col = e.target.closest && e.target.closest('.col'); if (col) setSpeaker(col.dataset.w, true); });
   document.addEventListener('click', (e) => {
+    // tapping a carrier opens its underwriting guide in a new tab
+    const uwb = e.target.closest('[data-seg^="_uw"] button');
+    if (uwb && F.UW_GUIDES[uwb.dataset.v]) window.open(F.UW_GUIDES[uwb.dataset.v], '_blank', 'noopener');
     const rm = e.target.closest('[data-rm]');
     if (rm) { removeLine(rm.dataset.rm, rm.dataset.rmw, +rm.dataset.i); return; }
     const ia = e.target.closest('[data-intro-add]');
