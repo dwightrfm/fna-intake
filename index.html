@@ -496,6 +496,8 @@ a{color:var(--tea);font-weight:600}
 .qa{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:14px;align-items:center;margin:4px 0 12px}
 .qa .say.q{margin:0}
 @media (max-width:560px){.qa{grid-template-columns:1fr;gap:8px}}
+/* extra old retirement accounts stay hidden until added */
+[data-old][hidden],.depfoot[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -656,6 +658,9 @@ a{color:var(--tea);font-weight:600}
   /* Plans 2 to 4 for each person have no box on the paper form. App-only keys,
      they count toward "Has" and print on the Notes lines. */
   const EXTRA_PLANS = Object.fromEntries(['p', 's'].map((w) => [w, [2, 3, 4].map((n) => ({ n, amt: `_plan${n}${w} amt`, type: `_plan${n}${w} type`, company: `_plan${n}${w} company`, cost: `_plan${n}${w} cost`, had: `_plan${n}${w} had` }))]));
+  /* Old retirement accounts 3 to 6 have no box on the paper form. App-only keys,
+     they count toward "Saved for retirement" and print on the Notes lines. */
+  const EXTRA_OLD = Object.fromEntries(['p', 's'].map((w) => [w, [3, 4, 5, 6].map((n) => ({ n, emp: `_old${n}${w} emp`, bal: `_old${n}${w} bal` }))]));
   /* Underwriting guides by carrier. Add a carrier = add a line. Empty link = "not added yet". */
   const UW_GUIDES = {
     Nationwide: 'https://drive.google.com/file/d/1HGRhQduKuMan6nqsaZAaVSwS1rFoeIX6/view?usp=drive_link',
@@ -762,6 +767,7 @@ a{color:var(--tea);font-weight:600}
     addM(sp(INC.biw, w), sp(INC.semi, w), sp(INC.week, w), sp(INC.month, w), ...INC.other.map((o) => sp(o.amt, w)));
     addM(sp(INC.biwM, w), sp(INC.semiM, w), sp(INC.weekM, w), sp(INC.net, w));
     EXTRA_PLANS[w].forEach((x) => addM(x.amt, x.cost));
+    EXTRA_OLD[w].forEach((x) => addM(x.bal));
     addM(sp(PRO.cost, w), sp(PRO.dDebts, w), sp(PRO.dIncome, w), sp(PRO.dMort, w), sp(PRO.dEdu, w), sp(PRO.dTotal, w), sp(PRO.dMin, w), sp(PRO.ltcCov, w), sp(PRO.ltcPrem, w));
   }
   DEBT_ROWS.forEach((r) => addM(r.bal, r.pay));
@@ -817,7 +823,7 @@ a{color:var(--tea);font-weight:600}
     // app-only totals for the math rail
     const sumW = (w, keys) => keys.reduce((a, k) => a + num(st[sp(k, w)]), 0);
     for (const w of ['p', 's']) {
-      c['ret_' + w] = sumW(w, [...RET_ROWS.map((r) => r.bal), ...RET.old.map((o) => o.bal)]);
+      c['ret_' + w] = sumW(w, [...RET_ROWS.map((r) => r.bal), ...RET.old.map((o) => o.bal)]) + EXTRA_OLD[w].reduce((a, x) => a + num(st[x.bal]), 0);
       // "2x salary" style answers count as that many years of take home pay (estimate, screen only)
       const xs = (v) => { const m = /(\d+(?:\.\d+)?)\s*(x|times)/i.exec(v || ''); return m ? +m[1] * c[sp(INC.net, w)] * 12 : num(v); };
       c['cov_' + w] = xs(st[sp(PRO.job, w)]) + xs(st[sp(PRO.outside, w)]) + EXTRA_PLANS[w].reduce((a, x) => a + xs(st[x.amt]), 0);
@@ -909,6 +915,11 @@ a{color:var(--tea);font-weight:600}
     });
     for (const w of (hasSpouse ? ['p', 's'] : ['p'])) {
       const who = T(PEOPLE[w === 'p' ? 0 : 1].name).split(' ')[0] || (w === 'p' ? 'Prospect' : 'Spouse');
+      EXTRA_OLD[w].forEach((x) => {
+        if (!T(x.emp) && !T(x.bal)) return;
+        const bal = num(st[x.bal]);
+        spill.push(`${who} old retirement account ${x.n}: ${[T(x.emp), bal && '$' + fmt(bal)].filter(Boolean).join(', ')}`);
+      });
       EXTRA_PLANS[w].forEach((x) => {
         if (![x.amt, x.type, x.company, x.cost, x.had].some((k) => T(k))) return;
         const amt = num(st[x.amt]), cost = num(st[x.cost]);
@@ -1001,7 +1012,7 @@ a{color:var(--tea);font-weight:600}
     return st;
   }
 
-  root.FNA = { DEPS, EXTRA_DEPS, EXTRA_PLANS, UW_GUIDES, depFlag, EDU_PRESETS, EXTRA_DEBTS, ALL_DEBTS, eduPer, sp, PEOPLE, RET_ROWS, RET, INC, PRO, DEBT_ROWS, GOALS, PROTECT_Q, EXP, COMMIT, commitText, EVENTS, INTRO_ROWS, PARTNER, introCount, theirEvents, RETURN, NOTES, RECS, HEADER, CHOICES, DATES, GROUPS, MONEY, PAGE4, num, fmt, compute, ageFrom, toPdfSpec, fromPdfValues, eduAuto };
+  root.FNA = { DEPS, EXTRA_DEPS, EXTRA_OLD, EXTRA_PLANS, UW_GUIDES, depFlag, EDU_PRESETS, EXTRA_DEBTS, ALL_DEBTS, eduPer, sp, PEOPLE, RET_ROWS, RET, INC, PRO, DEBT_ROWS, GOALS, PROTECT_Q, EXP, COMMIT, commitText, EVENTS, INTRO_ROWS, PARTNER, introCount, theirEvents, RETURN, NOTES, RECS, HEADER, CHOICES, DATES, GROUPS, MONEY, PAGE4, num, fmt, compute, ageFrom, toPdfSpec, fromPdfValues, eduAuto };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 <script>/* Fills the original FNA Intake PDF with app values using pdf-lib.
@@ -1721,10 +1732,10 @@ a{color:var(--tea);font-weight:600}
             const cls = i === 0 ? 'p' : i === 1 ? 's' : '';
             const a = i === 1 ? 'data-spouse-row' : i > 1 ? `data-dep="${i - 2}"` : '';
             return `<div class="role ${cls}" ${a}>${role}</div>
-              <div ${a}>${inp(p.name, { reg: role + ' name', ph: i < 2 ? 'First and last' : 'Name' })}</div>
-              <div ${a}>${seg(p.sex, [['M', 'M'], ['F', 'F']], { yn: true, reg: role + ' M/F' })}</div>
-              <div ${a}>${inp(p.dob[0], { type: 'date', reg: role + ' date of birth' })}</div>
-              <div ${a}>${inp(p.age, { type: 'num', reg: role + ' age' })}</div>
+              <div ${a}>${inp(p.name, { reg: role + ' name', ph: i < 2 ? 'First and last' : 'Name', who: i === 1 ? 's' : undefined })}</div>
+              <div ${a}>${seg(p.sex, [['M', 'M'], ['F', 'F']], { yn: true, reg: role + ' M/F', who: i === 1 ? 's' : undefined })}</div>
+              <div ${a}>${inp(p.dob[0], { type: 'date', reg: role + ' date of birth', who: i === 1 ? 's' : undefined })}</div>
+              <div ${a}>${inp(p.age, { type: 'num', reg: role + ' age', who: i === 1 ? 's' : undefined })}</div>
               <div ${a} class="flags" data-noring>${i > 1 ? flags(i - 2) : ''}</div>`;
           }).join('')}
         </div>
@@ -1760,6 +1771,8 @@ a{color:var(--tea);font-weight:600}
             ${inp(sp(r.bal, w), { type: 'money', reg: `${r.label} balance`, who: w })}${inp(sp(r.cpct, w), { type: 'pct', reg: `${r.label} contribution %`, who: w })}${inp(sp(r.camt, w), { type: 'money', reg: `${r.label} contribution $`, who: w })}${inp(sp(r.mpct, w), { type: 'pct', reg: `${r.label} employer match %`, who: w })}${inp(sp(r.mamt, w), { type: 'money', reg: `${r.label} employer match $`, who: w })}</div>`).join('')}
           ${Q('Any old retirement accounts?')}
           ${F.RET.old.map((o, i) => `<div class="grid g2" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);margin-bottom:8px">${inp(sp(o.emp, w), { label: i ? '' : 'Former employer', reg: `Old account ${i + 1} employer`, who: w })}${inp(sp(o.bal, w), { label: i ? '' : 'Balance', type: 'money', reg: `Old account ${i + 1} balance`, who: w })}</div>`).join('')}
+          ${F.EXTRA_OLD[w].map((x, i) => `<div class="grid g2" data-old="${w}${i}" hidden style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);margin-bottom:8px">${inp(x.emp, { reg: `Old account ${x.n} employer`, who: w, ph: 'Former employer' })}${inp(x.bal, { type: 'money', reg: `Old account ${x.n} balance`, who: w })}</div>`).join('')}
+          <div class="depfoot" style="margin-left:0"><button type="button" class="btn sm ghost" data-old-add="${w}">+ Add more accounts</button><span class="tip" style="margin-left:10px">Accounts past the 2 lines on the paper print in Notes.</span></div>
           ${Q('Do you have a pension?')}
           <div class="grid g3" style="grid-template-columns:minmax(0,1.5fr) 70px minmax(0,1fr)">${inp(sp(F.RET.pension.admin, w), { label: 'Pension: employer / admin', who: w })}${inp(sp(F.RET.pension.yrs, w), { label: 'Years', type: 'num', who: w, reg: 'Pension years of service' })}${inp(sp(F.RET.pension.monthly, w), { label: 'Monthly pension', type: 'money', who: w })}</div>
           <div style="height:10px"></div>
@@ -2012,6 +2025,12 @@ a{color:var(--tea);font-weight:600}
         const need = c[sp(F.PRO.dTotal, w)], have = c['cov_' + w];
         gap.innerHTML = need ? `<span>Has <b>$${F.fmt(have)}</b></span><span>&middot;</span><span>Gap <b class="${c['gap_' + w] ? 'bad' : ''}">$${F.fmt(c['gap_' + w])}</b></span>` : '';
       }
+      // extra old retirement accounts: same idea
+      const XO = F.EXTRA_OLD[w];
+      const usedO = XO.reduce((a, x, i) => ((String(S[x.emp] || '').trim() || String(S[x.bal] || '').trim()) ? i + 1 : a), 0);
+      const nO = Math.min(XO.length, Math.max(usedO, S['_oldShow' + w] || 0));
+      XO.forEach((x, i) => { const el = $(`[data-old="${w}${i}"]`); if (el) el.hidden = i >= nO; });
+      const ob = $(`[data-old-add="${w}"]`); if (ob) ob.closest('.depfoot').hidden = nO >= XO.length;
       // extra plans: show the ones in use, plus any added with the button
       const XP = F.EXTRA_PLANS[w];
       const used = XP.reduce((a, x, i) => ([x.amt, x.type, x.company, x.cost, x.had].some((k) => String(S[k] || '').trim()) ? i + 1 : a), 0);
@@ -2055,7 +2074,7 @@ a{color:var(--tea);font-weight:600}
     // spouse on/off
     $('#spouseToggle').classList.toggle('on', hasSpouse());
     $$('.duo').forEach((d) => d.classList.toggle('solo', !hasSpouse()));
-    $$('[data-spouse-row]').forEach((el) => (el.style.opacity = hasSpouse() ? '' : '.35'));
+    $$('[data-spouse-row]').forEach((el) => (el.style.display = hasSpouse() ? '' : 'none'));
     $('#spk').classList.toggle('solo', !hasSpouse());
     if (!hasSpouse() && speaker === 's') setSpeaker('p');
     rail(c, nm);
@@ -2157,7 +2176,7 @@ a{color:var(--tea);font-weight:600}
     let tot = 0, got = 0;
     for (const s of SECTIONS) {
       const sec = document.getElementById(s.id); if (!sec) continue;
-      let keys = $$('[data-k],[data-seg],[data-bool],[data-multi]', sec).filter((el) => (hasSpouse() || !el.closest('.col-s')) && !el.closest('[data-noring]') && !el.closest('[data-dep][hidden]') && !el.closest('[data-xdebt][hidden]') && !el.closest('[data-plan][hidden]')).map((el) => el.dataset.k || el.dataset.seg || el.dataset.bool || el.dataset.multi);
+      let keys = $$('[data-k],[data-seg],[data-bool],[data-multi]', sec).filter((el) => (hasSpouse() || !el.closest('.col-s, [data-spouse-row]')) && !el.closest('[data-noring]') && !el.closest('[data-dep][hidden]') && !el.closest('[data-xdebt][hidden]') && !el.closest('[data-plan][hidden]') && !el.closest('[data-old][hidden]')).map((el) => el.dataset.k || el.dataset.seg || el.dataset.bool || el.dataset.multi);
       keys = [...new Set(keys)];
       const filled = keys.filter((k) => S[k] !== undefined && S[k] !== '' && S[k] !== false).length;
       tot += keys.length; got += filled;
@@ -2214,6 +2233,15 @@ a{color:var(--tea);font-weight:600}
     if (ia) { addIntro(ia.dataset.introAdd); return; }
     if (e.target.closest('#depAdd')) { addDep(); return; }
     if (e.target.closest('#debtAdd')) { addDebt(); return; }
+    const oa = e.target.closest('[data-old-add]');
+    if (oa) {
+      const w = oa.dataset.oldAdd, XO = F.EXTRA_OLD[w];
+      const n = $$(`[data-old^="${w}"]`).filter((el) => !el.hidden).length; if (n >= XO.length) return;
+      S['_oldShow' + w] = n + 1; save(); update();
+      const el = $(`[data-k="${CSS.escape(XO[n].emp)}"]`); if (el) el.focus();
+      setSpeaker(w, true);
+      return;
+    }
     const pa = e.target.closest('[data-plan-add]');
     if (pa) {
       const w = pa.dataset.planAdd, XP = F.EXTRA_PLANS[w];
