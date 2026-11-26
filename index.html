@@ -503,6 +503,10 @@ a{color:var(--tea);font-weight:600}
 .rmwrap>.in,.rmwrap>.fld{flex:1;min-width:0}
 .plan .planhd{display:flex;justify-content:space-between;align-items:center}
 .people .flags .rmrow{width:28px;height:28px;font-size:16px}
+/* term vs perm: familiar or not, script opens on "not familiar" */
+.famrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.famscript[hidden]{display:none}
+.famscript .famhd{padding:11px 16px 6px;font-size:12.5px;font-weight:700;color:var(--tea)}
 </style>
 </head>
 <body>
@@ -1850,7 +1854,9 @@ a{color:var(--tea);font-weight:600}
           <div class="gap" data-gap="${w}"></div>
           <p class="say sm" data-min="${w}" style="margin-top:14px"></p>
           ${inp(sp(F.PRO.want, w), { label: 'How much would they want to have?', who: w })}
-          <details class="script" open><summary>Term vs perm script${w === 's' ? ' (recap for the spouse)' : ''}</summary><p>How familiar are you with the two main types of protection, term vs perm? Term is temporary, lasts for a max of 30 years, it is like renting an apartment. Because 99% of term plans never pay out any benefits, it is very cheap. Perm stands for a category of permanent options: whole life, universal life, IULs, VULs. Depending on the type of permanent plan, some offer additional benefits like tax free retirement income, long term care protection, college funding, and other living benefits. But because there are so many more benefits, it is not as dirt cheap as term. Permanent plans are like owning your house, where you will eventually get back much more than what you put in. We offer both. As a concept, which do you prefer?</p></details>
+          ${Q('How familiar are you with the two main types of protection, term vs perm?')}
+          <div class="famrow">${seg('_fam' + w, [['Y', 'Familiar'], ['N', 'Not familiar']], { reg: 'Familiar with term vs perm', who: w })}</div>
+          <div class="script famscript" data-famscript="${w}" hidden><div class="famhd">Term vs perm script${w === 's' ? ' (recap for the spouse)' : ''}</div><p>Term is temporary, lasts for a max of 30 years, it is like renting an apartment. Because 99% of term plans never pay out any benefits, it is very cheap. Perm stands for a category of permanent options: whole life, universal life, IULs, VULs. Depending on the type of permanent plan, some offer additional benefits like tax free retirement income, long term care protection, college funding, and other living benefits. But because there are so many more benefits, it is not as dirt cheap as term. Permanent plans are like owning your house, where you will eventually get back much more than what you put in.</p></div>
           ${Q(w === 'p' ? 'We offer both. As a concept, which do you prefer? ... Why is that?' : 'Do you prefer term or perm? ... Why is that?')}
           <div class="grid g2" style="grid-template-columns:auto minmax(0,1fr);align-items:end">${seg(sp(F.PRO.prefer, w), [['Term', 'Term'], ['Perm', 'Perm'], ['Both', 'Both']], { label: 'Prefers', who: w, reg: 'Prefers term or perm' })}${inp(sp(F.PRO.why, w), { label: 'Why is that?', who: w, reg: 'Why term or perm' })}</div>
           <h3>Health</h3>
@@ -2032,6 +2038,8 @@ a{color:var(--tea);font-weight:600}
         const need = c[sp(F.PRO.dTotal, w)], have = c['cov_' + w];
         gap.innerHTML = need ? `<span>Has <b>$${F.fmt(have)}</b></span><span>&middot;</span><span>Gap <b class="${c['gap_' + w] ? 'bad' : ''}">$${F.fmt(c['gap_' + w])}</b></span>` : '';
       }
+      // term vs perm: the script opens only when they say they are not familiar
+      { const fs = $(`[data-famscript="${w}"]`); if (fs) fs.hidden = S['_fam' + w] !== 'N'; }
       // extra old retirement accounts: same idea
       const XO = F.EXTRA_OLD[w];
       const usedO = XO.reduce((a, x, i) => ((String(S[x.emp] || '').trim() || String(S[x.bal] || '').trim()) ? i + 1 : a), 0);
